@@ -122,7 +122,7 @@ public class ChatServer {
 							u.setWriter(sockWriter);
 							u.setPort(sock.getPort());
 							u.setOnlineStatus(true);
-							u.getWriter().println(signalingChar + "login ");
+							u.getWriter().println(signalingChar + "login " + username);
 							u.getWriter().flush();
 							return;
 						}
@@ -132,6 +132,16 @@ public class ChatServer {
 				sockWriter.flush();
 				break;
 
+				
+			case "logout":
+				username = message.substring(message.indexOf(" ") + 1);
+				for (ChatUser u : userList) {
+					if (u.getUsername().equals(username)) {
+						u.setOnlineStatus(false);
+						return;
+					}
+				}
+				break;
 			// Create a new user, or tell the client a username is taken
 			case "register":
 				username = message.substring(message.indexOf(" ") + 1, message.lastIndexOf(" "));

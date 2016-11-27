@@ -41,6 +41,8 @@ public class ChatClient extends Application {
 	private Pane mainPane;
 	private TextArea currentChat;
 	private TextArea sendText;
+	private static Text loginErrorText;
+	private Text onlineStatus;
 	private Rectangle2D primaryScreenBounds;
 	private double screenScale = .5;
 	private int canvasXPos;
@@ -54,9 +56,9 @@ public class ChatClient extends Application {
 	private static final int maxUsernameLength = 15;
 	private static final int maxPasswordLength = 15;
 	private static String signalingChar = "~"; // used to transmit commands to the server
-	private static Text loginErrorText;
 	private ArrayList<Node> loginNodes = new ArrayList<Node>();
 	private ArrayList<Node> chatNodes = new ArrayList<Node>();
+	private ArrayList<Node> onlineNodes = new ArrayList<Node>();
 
 	public void run() throws Exception {
 		launch();
@@ -216,20 +218,55 @@ public class ChatClient extends Application {
 				sendText.clear();
 			}
 		});
+		
+		onlineStatus = new Text();
+		onlineStatus.relocate(screenWidth*.05*screenScale, screenHeight*.05*screenScale);
+		
+		Button logoutBtn = new Button("Logout");
+		logoutBtn.setPrefSize(btnWidth, btnHeight);
+		logoutBtn.relocate(screenWidth*.05*screenScale, screenHeight*.15*screenScale);
+		logoutBtn.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+
+				logoutExecute(onlineStatus.getText().substring("Logged in as: ".length() + 1));
+			}
+		});
+		
 		//TODO: improve adding
 		chatNodes.add(currentChat);
 		chatNodes.add(sendText);
 		chatNodes.add(sendButton);
-		mainPane.getChildren().addAll(currentChat, sendText, sendButton);
+		chatNodes.add(onlineStatus);
+		chatNodes.add(logoutBtn);
+		mainPane.getChildren().addAll(currentChat, sendText, sendButton, onlineStatus, logoutBtn);
 		for(Node n:chatNodes){
 			n.setVisible(false);
 		}
 	}
 	
-	private void loginExecute(){
+	private void loginExecute(String username){
+		onlineStatus.setText("Logged in as: " + username);
+		
+		for(Node n: loginNodes){
+			n.setVisible(false);
+		}
 		for(Node n:chatNodes){
 			n.setVisible(true);
+		}	
+		
+	}
+	
+	private void logoutExecute(String username){
+		writer.println(signalingChar + "logout " + username);
+		writer.flush();
+		onlineStatus.setText("");
+		for(Node n: loginNodes){
+			n.setVisible(true);
 		}
+		for(Node n:chatNodes){
+			n.setVisible(false);
+		}	
 	}
 	
 	private void setUpNetworking() throws Exception {
@@ -292,10 +329,7 @@ public class ChatClient extends Application {
 				break;
 				
 			case "login":
-				for(Node n: loginNodes){
-					n.setVisible(false);
-				}
-				loginExecute();
+				loginExecute(message.substring(message.indexOf(' ')));
 				break;
 				
 			default:
