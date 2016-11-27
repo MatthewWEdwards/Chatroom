@@ -229,7 +229,7 @@ public class ChatClient extends Application {
 			@Override
 			public void handle(ActionEvent event) {
 
-				logoutExecute(onlineStatus.getText().substring("Logged in as: ".length() + 1));
+				logoutExecute(onlineStatus.getText().substring("Logged in as: ".length()));
 			}
 		});
 		
@@ -329,7 +329,7 @@ public class ChatClient extends Application {
 				break;
 				
 			case "login":
-				loginExecute(message.substring(message.indexOf(' ')));
+				loginExecute(message.substring(message.indexOf(' ')+1));
 				break;
 				
 			default:
