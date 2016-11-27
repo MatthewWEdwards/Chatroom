@@ -1,3 +1,15 @@
+/* Chat Room ChatServer.java
+ * EE422C Project 7 submission by
+ * Regan Stehle
+ * rms3762
+ * 16465
+ * Matthew Edwards
+ * mwe295
+ * 16475
+ * Slip days used: <0>
+ * Fall 2016
+ */
+
 package assignment7;
 
 import java.io.BufferedReader;
@@ -7,10 +19,17 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
 
 public class ChatServer {
+	private Map<Integer, PrintWriter> streams = new HashMap<Integer, PrintWriter>();
 	private ArrayList<PrintWriter> clientOutputStreams;
-
+	private ArrayList<ChatUser> userList = new ArrayList<ChatUser>();
+	//TODO: make it so the server tells the client what the signaling char is
+	private static final String signalingChar = "~"; // used to transmit commands to the server
+	
 	public static void main(String[] args) {
 		try {
 			new ChatServer().setUpNetworking();
@@ -27,7 +46,7 @@ public class ChatServer {
 			Socket clientSocket = serverSock.accept();
 			PrintWriter writer = new PrintWriter(clientSocket.getOutputStream());
 			clientOutputStreams.add(writer);
-
+			streams.put(Integer.valueOf(clientSocket.getPort()), writer);
 			Thread t = new Thread(new ClientHandler(clientSocket));
 			t.start();
 			System.out.println("got a connection");
@@ -36,11 +55,9 @@ public class ChatServer {
 	}
 
 	private void notifyClients(String message) {
-
-
-		for (PrintWriter writer : clientOutputStreams) {
-			writer.println(message);
-			writer.flush();
+		for (ChatUser u : userList) {
+			u.getOutputStream().println(message);
+			u.getOutputStream().flush();
 		}
 	}
 
@@ -56,11 +73,53 @@ public class ChatServer {
 			String message;
 			try {
 				while ((message = reader.readLine()) != null) {
-					System.out.println("read " + message);
-					notifyClients(message);
+					if(message.length() > 0 && message.charAt(0) == signalingChar.charAt(0) ){
+						command(message);
+					}
+					else{
+						System.out.println("read " + message);
+						notifyClients(message);
+					}
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
+			}
+		}
+		
+		public void command(String message){
+			String username = new String();
+			String password = new String();
+			switch(message.substring(1, message.indexOf(" "))){			
+				case "login":		
+					String port = message.substring(message.indexOf("login ") + 6, message.lastIndexOf("~"));
+					username = message.substring(message.lastIndexOf("~")+1, message.lastIndexOf(" "));
+					password = message.substring(message.lastIndexOf(" ")+1, message.length());
+					
+					for(ChatUser u: userList){
+						if(u.getUsername().equals(username) 
+						   && u.getPassword().equals(password)){
+						   if(u.getOnlineStatus()){
+							   //TODO: already online protocol
+						   } else{
+							   u.setOutputStream(streams.get(Integer.parseInt(port)));
+							   u.setOnlineStatus(true);
+							   return;
+						   }
+						}
+					}
+					break;
+					
+				case "register":
+					username = message.substring(message.indexOf(" ")+1, message.lastIndexOf(" "));
+					password = message.substring(message.lastIndexOf(" ")+1, message.length());
+					ChatUser toAdd = new ChatUser(username, password);
+					for(ChatUser u: userList){
+						if(u.equals(toAdd)){
+							//TODO: user exists protocol
+							return;
+						}
+					}
+					userList.add(toAdd);
 			}
 		}
 	}
