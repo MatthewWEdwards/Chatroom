@@ -14,12 +14,15 @@ package assignment7;
 
 import java.io.*;
 import java.net.*;
+import java.util.ArrayList;
+
 import javax.swing.*;
 
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Rectangle2D;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
@@ -46,9 +49,14 @@ public class ChatClient extends Application {
 	private int canvasHeight;
 	private double screenWidth;
 	private double screenHeight;
+	private int btnWidth;
+	private int btnHeight;
 	private static final int maxUsernameLength = 15;
 	private static final int maxPasswordLength = 15;
-	private static final String signalingChar = "~"; // used to transmit commands to the server
+	private static String signalingChar = "~"; // used to transmit commands to the server
+	private static Text loginErrorText;
+	private ArrayList<Node> loginNodes = new ArrayList<Node>();
+	private ArrayList<Node> chatNodes = new ArrayList<Node>();
 
 	public void run() throws Exception {
 		launch();
@@ -69,50 +77,20 @@ public class ChatClient extends Application {
 
 	private void initView() {
 		
-		int btnWidth = (int) (screenWidth*.1*screenScale);
-		int btnHeight = (int) (screenHeight*.05*screenScale);
+		btnWidth = (int) (screenWidth*.1*screenScale);
+		btnHeight = (int) (screenHeight*.05*screenScale);
 		canvasXPos = (int) (screenWidth*.5*screenScale);
 		canvasYPos = (int) (screenHeight*.05*screenScale);
 		canvasWidth = (int) (screenWidth*.4*screenScale);
 		canvasHeight = (int) (screenHeight*.4*screenScale);
 
-		loginAndRegister();
+		loginDisplay();
+		chatDisplay();
 		
-		currentChat = new TextArea();
-		currentChat.setWrapText(true);
-		currentChat.setEditable(false);
-		currentChat.setMaxWidth(screenWidth*.4*screenScale);
-		currentChat.relocate(canvasXPos, canvasYPos);
-		currentChat.setPrefSize(canvasWidth, canvasHeight);
-		mainPane.getChildren().add(currentChat);
 		
-		sendText = new TextArea();
-		sendText.setEditable(true);
-		sendText.relocate(canvasXPos + btnWidth*1.1, canvasYPos + canvasHeight + 25);
-		sendText.setPrefSize(canvasWidth - btnWidth*1.1, 10);
-		sendText.setTextFormatter(new TextFormatter<String>(change -> { // prevents strings that are too long and newlines
-        	if(change.getControlNewText().contains(signalingChar)){ 
-        		return null;
-        	}
-        	return change;
-		}));
-		mainPane.getChildren().add(sendText);
-		
-		Button sendButton = new Button("Send");
-		sendButton.setPrefSize(btnWidth, btnHeight);
-		sendButton.relocate(canvasXPos, canvasYPos + canvasHeight + 25);
-		sendButton.setOnAction(new EventHandler<ActionEvent>() {
-			@Override
-			public void handle(ActionEvent event) {
-				writer.println(sendText.getText());
-				writer.flush();
-				sendText.clear();
-			}
-		});
-		mainPane.getChildren().add(sendButton);
 	}
 
-	private void loginAndRegister(){
+	private void loginDisplay(){
 		
 		Text username = new Text("Username:");
 		username.relocate(screenWidth*.05*screenScale, screenHeight*.05*screenScale);
@@ -122,6 +100,7 @@ public class ChatClient extends Application {
 		errorText.relocate(screenWidth*.05*screenScale, screenHeight*.35*screenScale);
 		errorText.fillProperty().setValue(Color.RED);
 		errorText.setVisible(false);
+		loginErrorText = errorText;
 		
 		TextArea usernameField = new TextArea();
 		usernameField.setTextFormatter(new TextFormatter<String>(change -> { // prevents strings that are too long and newlines
@@ -160,7 +139,7 @@ public class ChatClient extends Application {
 		passwordField.relocate(screenWidth*.05*screenScale + username.boundsInLocalProperty().get().getWidth() + 5, screenHeight*.15*screenScale);
 		
 		Button loginBtn = new Button();
-		loginBtn.setPrefSize((int) (screenWidth*.1*screenScale), (int) (screenHeight*.05*screenScale));
+		loginBtn.setPrefSize(btnWidth, btnHeight);
 		loginBtn.relocate(screenWidth*.05*screenScale + username.boundsInLocalProperty().get().getWidth() + 5, screenHeight*.25*screenScale);
 		loginBtn.setText("Login");
 		loginBtn.setOnAction(new EventHandler<ActionEvent>() {
@@ -178,7 +157,7 @@ public class ChatClient extends Application {
 		});
 		
 		Button registerBtn = new Button();
-		registerBtn.setPrefSize((int) (screenWidth*.1*screenScale), (int) (screenHeight*.05*screenScale));
+		registerBtn.setPrefSize(btnWidth, btnHeight);
 		registerBtn.relocate(screenWidth*.05*screenScale + username.boundsInLocalProperty().get().getWidth() + 5 + (int) (screenWidth*.1*screenScale), screenHeight*.25*screenScale);
 		registerBtn.setText("Register");
 		registerBtn.setOnAction(new EventHandler<ActionEvent>() {
@@ -196,7 +175,61 @@ public class ChatClient extends Application {
 			}
 		});
 		
+		//TODO: make this series of adds better
+		loginNodes.add(username);
+		loginNodes.add(password);
+		loginNodes.add(usernameField);
+		loginNodes.add(passwordField);
+		loginNodes.add(loginBtn);
+		loginNodes.add(registerBtn);
+		loginNodes.add(errorText);
 		mainPane.getChildren().addAll(username, password, usernameField, passwordField, loginBtn, registerBtn, errorText);		
+	}
+	
+	private void chatDisplay(){
+		currentChat = new TextArea();
+		currentChat.setWrapText(true);
+		currentChat.setEditable(false);
+		currentChat.setMaxWidth(screenWidth*.4*screenScale);
+		currentChat.relocate(canvasXPos, canvasYPos);
+		currentChat.setPrefSize(canvasWidth, canvasHeight);
+		
+		sendText = new TextArea();
+		sendText.setEditable(true);
+		sendText.relocate(canvasXPos + btnWidth*1.1, canvasYPos + canvasHeight + 25);
+		sendText.setPrefSize(canvasWidth - btnWidth*1.1, 10);
+		sendText.setTextFormatter(new TextFormatter<String>(change -> { // prevents strings that are too long and newlines
+        	if(change.getControlNewText().contains(signalingChar)){ 
+        		return null;
+        	}
+        	return change;
+		}));
+		
+		Button sendButton = new Button("Send");
+		sendButton.setPrefSize(btnWidth, btnHeight);
+		sendButton.relocate(canvasXPos, canvasYPos + canvasHeight + 25);
+		sendButton.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				writer.println(sendText.getText());
+				writer.flush();
+				sendText.clear();
+			}
+		});
+		//TODO: improve adding
+		chatNodes.add(currentChat);
+		chatNodes.add(sendText);
+		chatNodes.add(sendButton);
+		mainPane.getChildren().addAll(currentChat, sendText, sendButton);
+		for(Node n:chatNodes){
+			n.setVisible(false);
+		}
+	}
+	
+	private void loginExecute(){
+		for(Node n:chatNodes){
+			n.setVisible(true);
+		}
 	}
 	
 	private void setUpNetworking() throws Exception {
@@ -222,13 +255,53 @@ public class ChatClient extends Application {
 		public void run() {
 			String message;
 			try {
+				
 				while ((message = reader.readLine()) != null) {
-					currentChat.appendText(message + "\n");
+					if(message.length() > 0 && message.charAt(0) == signalingChar.charAt(0)){
+						serverCommands(message);
+					}else{
+						currentChat.appendText(message + "\n");
+					}
 				}
 			} catch (IOException ex) {
 				ex.printStackTrace();
 			}
 		}
+	}
+	
+	private void serverCommands(String message){
+		switch(message.substring(1, message.indexOf(' '))){
+			case "registerError":
+				loginErrorText.setText("Username taken");
+				loginErrorText.setVisible(true);
+				break;
+				
+			case "passwordMismatch":
+				loginErrorText.setText("Password incorrect");
+				loginErrorText.setVisible(true);
+				break;
+				
+			case "alreadyOnline":
+				loginErrorText.setText("User already online");
+				loginErrorText.setVisible(true);
+				break;
+				
+			case "noUser":
+				loginErrorText.setText("Username enter not associate with any user");
+				loginErrorText.setVisible(true);
+				break;
+				
+			case "login":
+				for(Node n: loginNodes){
+					n.setVisible(false);
+				}
+				loginExecute();
+				break;
+				
+			default:
+				break;
+		}
+		
 	}
 
 

@@ -18,7 +18,7 @@ public class ChatUser{
 	private String username;
 	private String password; //TODO: salted hash?
 	private boolean online;
-	private PrintWriter outputStream;
+	private PrintWriter userWriter;
 	private int port;
 	
 	public ChatUser(String username, String password){
@@ -42,12 +42,12 @@ public class ChatUser{
 		online = set;
 	}
 	
-	public PrintWriter getOutputStream(){
-		return outputStream;
+	public PrintWriter getWriter(){
+		return userWriter;
 	}
 	
-	public void setOutputStream(PrintWriter outputStream){
-		this.outputStream = outputStream;
+	public void setWriter(PrintWriter userWriter){
+		this.userWriter = userWriter;
 	}
 	
 	public int getPort(){
