@@ -19,6 +19,7 @@ public class ChatUser{
 	private String password; //TODO: salted hash?
 	private boolean online;
 	private PrintWriter outputStream;
+	private int port;
 	
 	public ChatUser(String username, String password){
 		this.username = username;
@@ -47,6 +48,14 @@ public class ChatUser{
 	
 	public void setOutputStream(PrintWriter outputStream){
 		this.outputStream = outputStream;
+	}
+	
+	public int getPort(){
+		return port;
+	}
+	
+	public void setPort(int port){
+		this.port = port;
 	}
 	
 	@Override

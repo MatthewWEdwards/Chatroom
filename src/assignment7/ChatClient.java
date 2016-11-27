@@ -26,13 +26,13 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.layout.Pane;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 
 
 public class ChatClient extends Application {
-	private Socket clientSocket;
 	private BufferedReader reader;
 	private PrintWriter writer;
 	private Pane mainPane;
@@ -76,7 +76,7 @@ public class ChatClient extends Application {
 		canvasWidth = (int) (screenWidth*.4*screenScale);
 		canvasHeight = (int) (screenHeight*.4*screenScale);
 
-		login();
+		loginAndRegister();
 		
 		currentChat = new TextArea();
 		currentChat.setWrapText(true);
@@ -112,12 +112,16 @@ public class ChatClient extends Application {
 		mainPane.getChildren().add(sendButton);
 	}
 
-	private void login(){
+	private void loginAndRegister(){
 		
 		Text username = new Text("Username:");
 		username.relocate(screenWidth*.05*screenScale, screenHeight*.05*screenScale);
 		Text password = new Text("Password:");
 		password.relocate(screenWidth*.05*screenScale, screenHeight*.15*screenScale);
+		Text errorText = new Text();
+		errorText.relocate(screenWidth*.05*screenScale, screenHeight*.35*screenScale);
+		errorText.fillProperty().setValue(Color.RED);
+		errorText.setVisible(false);
 		
 		TextArea usernameField = new TextArea();
 		usernameField.setTextFormatter(new TextFormatter<String>(change -> { // prevents strings that are too long and newlines
@@ -163,11 +167,13 @@ public class ChatClient extends Application {
 			@Override
 			public void handle(ActionEvent event) {
 				if(usernameField.getText().length() < 1 || passwordField.getText().length() < 1){
+					errorText.setText("Username and password textboxes must not be empty.");
+					errorText.setVisible(true);
 					return;
-					//TODO: no text protocol
 				}
-				writer.println(signalingChar + "login " + Integer.valueOf((clientSocket.getLocalPort())).toString() + "~" + usernameField.getText() + " " + passwordField.getText());
+				writer.println(signalingChar + "login " + usernameField.getText() + " " + passwordField.getText());
 				writer.flush();
+				errorText.setVisible(false);
 			}
 		});
 		
@@ -179,21 +185,23 @@ public class ChatClient extends Application {
 			@Override
 			public void handle(ActionEvent event) {
 				if(usernameField.getText().length() < 1 || passwordField.getText().length() < 1){
+					errorText.setText("Username and password textboxes must not be empty.");
+					errorText.setVisible(true);
 					return;
-					//TODO: no text protocol
+					
 				}
 				writer.println(signalingChar + "register " + usernameField.getText() + " " + passwordField.getText());
 				writer.flush();
+				errorText.setVisible(false);
 			}
 		});
 		
-		mainPane.getChildren().addAll(username, password, usernameField, passwordField, loginBtn, registerBtn);		
+		mainPane.getChildren().addAll(username, password, usernameField, passwordField, loginBtn, registerBtn, errorText);		
 	}
 	
 	private void setUpNetworking() throws Exception {
 		@SuppressWarnings("resource")
 		Socket sock = new Socket("127.0.0.1", 4242);
-		clientSocket = sock;
 		InputStreamReader streamReader = new InputStreamReader(sock.getInputStream());
 		reader = new BufferedReader(streamReader);
 		writer = new PrintWriter(sock.getOutputStream());

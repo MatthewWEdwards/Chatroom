@@ -54,18 +54,22 @@ public class ChatServer {
 
 	}
 
-	private void notifyClients(String message) {
+	private void notifyClients(String message, Socket sock) {
+		String.valueOf(sock.getPort());
 		for (ChatUser u : userList) {
-			u.getOutputStream().println(message);
-			u.getOutputStream().flush();
+			if(u.getOnlineStatus()){
+				u.getOutputStream().println(String.valueOf(sock.getPort()) + " - " + message);
+				u.getOutputStream().flush();
+			}
 		}
 	}
 
 	class ClientHandler implements Runnable {
 		private BufferedReader reader;
+		Socket sock;
 
 		public ClientHandler(Socket clientSocket) throws IOException {
-			Socket sock = clientSocket;
+			sock = clientSocket;
 			reader = new BufferedReader(new InputStreamReader(sock.getInputStream()));
 		}
 
@@ -78,7 +82,7 @@ public class ChatServer {
 					}
 					else{
 						System.out.println("read " + message);
-						notifyClients(message);
+						notifyClients(message, sock);
 					}
 				}
 			} catch (IOException e) {
@@ -91,8 +95,7 @@ public class ChatServer {
 			String password = new String();
 			switch(message.substring(1, message.indexOf(" "))){			
 				case "login":		
-					String port = message.substring(message.indexOf("login ") + 6, message.lastIndexOf("~"));
-					username = message.substring(message.lastIndexOf("~")+1, message.lastIndexOf(" "));
+					username = message.substring(message.indexOf(" ")+1, message.lastIndexOf(" "));
 					password = message.substring(message.lastIndexOf(" ")+1, message.length());
 					
 					for(ChatUser u: userList){
@@ -100,13 +103,16 @@ public class ChatServer {
 						   && u.getPassword().equals(password)){
 						   if(u.getOnlineStatus()){
 							   //TODO: already online protocol
+							   return;
 						   } else{
-							   u.setOutputStream(streams.get(Integer.parseInt(port)));
+							   u.setOutputStream(streams.get(sock.getPort()));
+							   u.setPort(sock.getPort());
 							   u.setOnlineStatus(true);
 							   return;
 						   }
 						}
 					}
+					
 					break;
 					
 				case "register":
