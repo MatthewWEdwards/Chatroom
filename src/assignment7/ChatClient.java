@@ -16,8 +16,6 @@ import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
 
-import javax.swing.*;
-
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -25,7 +23,6 @@ import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.layout.Pane;
@@ -66,7 +63,7 @@ public class ChatClient extends Application {
 	
 	@Override
 	public void start(Stage primaryStage) throws Exception {
-		setUpNetworking();
+		
 		
 		primaryScreenBounds = Screen.getPrimary().getVisualBounds();
 		screenWidth = primaryScreenBounds.getWidth();
@@ -75,6 +72,7 @@ public class ChatClient extends Application {
 		primaryStage.setScene(new Scene(mainPane, primaryScreenBounds.getWidth()*screenScale, primaryScreenBounds.getHeight()*screenScale));
 		primaryStage.show();	
 		initView();
+		setUpNetworking();
 	}
 
 	private void initView() {
@@ -107,7 +105,7 @@ public class ChatClient extends Application {
 		TextArea usernameField = new TextArea();
 		usernameField.setTextFormatter(new TextFormatter<String>(change -> { // prevents strings that are too long and newlines
 			String testString = change.getControlNewText();
-			if(testString.length() > maxPasswordLength){
+			if(testString.length() > maxUsernameLength){
         		return null;
         	}else{
         		for(int i = 0; i < testString.length(); i++){
@@ -118,10 +116,10 @@ public class ChatClient extends Application {
         		return change;
         	}
 		}));
-				
 		usernameField.setWrapText(false);
 		usernameField.setPrefSize(screenWidth*.2*screenScale, 1);
 		usernameField.relocate(screenWidth*.05*screenScale + username.boundsInLocalProperty().get().getWidth() + 5, screenHeight*.05*screenScale);
+		
 		TextArea passwordField = new TextArea();
 		passwordField.setTextFormatter(new TextFormatter<String>(change -> {// prevents strings that are too long and newlines
         	String testString = change.getControlNewText();
