@@ -1,0 +1,13 @@
+Todo
+
+* = Necessary
+~ = Vaguely Necessary
+
+
+*Public/Private chats
+Friends list
+Fix sendMessage TextArea (currently, clients can send multiple lines at once)
+*Make clients enter server IP it wants to connect to - MATT: i'm working on this now
+~Make code work on multiple computers
+Chat history
+Password change options
