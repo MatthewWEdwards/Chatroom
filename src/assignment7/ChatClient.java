@@ -25,6 +25,8 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextFormatter;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
@@ -195,7 +197,7 @@ public class ChatClient extends Application {
 		currentChat.setPrefSize(canvasWidth, canvasHeight);
 		
 		sendText = new TextArea();
-		sendText.setEditable(true);
+		sendText.setEditable(true);	
 		sendText.relocate(canvasXPos + btnWidth*1.1, canvasYPos + canvasHeight + 25);
 		sendText.setPrefSize(canvasWidth - btnWidth*1.1, 10);
 		sendText.setTextFormatter(new TextFormatter<String>(change -> { // prevents strings that are too long and newlines
@@ -204,6 +206,18 @@ public class ChatClient extends Application {
         	}
         	return change;
 		}));
+		sendText.setOnKeyPressed(new EventHandler<KeyEvent>(){
+			@Override
+		    public void handle(KeyEvent keyEvent) {
+		        if (keyEvent.getCode() == KeyCode.ENTER)  {
+		        	if(sendText.getText().trim().length() > 0){
+						writer.println(sendText.getText().trim());
+						writer.flush();
+		        	}
+					sendText.clear();
+		        }
+		    }
+		});	
 		
 		Button sendButton = new Button("Send");
 		sendButton.setPrefSize(btnWidth, btnHeight);
@@ -211,9 +225,11 @@ public class ChatClient extends Application {
 		sendButton.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent event) {
-				writer.println(sendText.getText());
-				writer.flush();
-				sendText.clear();
+				if(sendText.getText().trim().length() > 0){
+					writer.println(sendText.getText());
+					writer.flush();
+				}
+					sendText.clear();
 			}
 		});
 		
@@ -226,7 +242,6 @@ public class ChatClient extends Application {
 		logoutBtn.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent event) {
-
 				logoutExecute(onlineStatus.getText().substring("Logged in as: ".length()));
 			}
 		});
