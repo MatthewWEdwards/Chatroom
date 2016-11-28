@@ -57,7 +57,8 @@ public class ChatClient extends Application {
 	private static String signalingChar = "~"; // used to transmit commands to the server
 	private ArrayList<Node> loginNodes = new ArrayList<Node>();
 	private ArrayList<Node> chatNodes = new ArrayList<Node>();
-	private ArrayList<Node> onlineNodes = new ArrayList<Node>();
+	private ArrayList<Node> networkNodes = new ArrayList<Node>();
+	private ArrayList<Node> overallNodes = new ArrayList<Node>();
 
 	public void run() throws Exception {
 		launch();
@@ -74,7 +75,6 @@ public class ChatClient extends Application {
 		primaryStage.setScene(new Scene(mainPane, primaryScreenBounds.getWidth()*screenScale, primaryScreenBounds.getHeight()*screenScale));
 		primaryStage.show();	
 		initView();
-		setUpNetworking();
 	}
 
 	private void initView() {
@@ -86,12 +86,78 @@ public class ChatClient extends Application {
 		canvasWidth = (int) (screenWidth*.4*screenScale);
 		canvasHeight = (int) (screenHeight*.4*screenScale);
 
+		Text serverIP = new Text();
+		serverIP.relocate(screenWidth*.05*screenScale, 0);
+		serverIP.setVisible(false);
+		overallNodes.add(serverIP);
+		mainPane.getChildren().add(serverIP);
+		
+		networkDisplay();
 		loginDisplay();
 		chatDisplay();
 		
 		
 	}
 
+	private void networkDisplay(){
+		Text promptIP = new Text("Enter server IP: ");
+		promptIP.relocate(screenWidth*.05*screenScale, screenHeight*.05*screenScale);
+		
+		Text connectionError = new Text("Server not found");
+		connectionError.relocate(screenWidth*.05*screenScale, screenHeight*.15*screenScale);
+		connectionError.setFill(Color.RED);
+		connectionError.setVisible(false);
+		
+		TextArea promptIPField = new TextArea();
+		promptIPField.setTextFormatter(new TextFormatter<String>(change -> { // prevents strings that are too long and newlines
+			String testString = change.getControlNewText();
+			if(testString.length() > maxUsernameLength){
+        		return null;
+        	}else{
+        		for(int i = 0; i < testString.length(); i++){
+        			if(!ApprovedChars.approvedCharSet.contains(testString.charAt(i))){
+        				return null;
+        			}
+        		}
+        		return change;
+        	}
+		}));
+		promptIPField.setWrapText(false);
+		promptIPField.setPrefSize(screenWidth*.2*screenScale, 1);
+		promptIPField.relocate(screenWidth*.05*screenScale + promptIP.boundsInLocalProperty().get().getWidth() + 5, screenHeight*.05*screenScale);
+		promptIPField.setText("127.0.0.1");
+		
+		Button connectBtn = new Button();
+		connectBtn.setPrefSize(btnWidth, btnHeight);
+		connectBtn.relocate(screenWidth*.05*screenScale + promptIPField.boundsInLocalProperty().get().getWidth() + 5, screenHeight*.25*screenScale);
+		connectBtn.setText("Login");
+		connectBtn.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				try {
+					setUpNetworking(promptIPField.getText().trim());
+					for(Node n:loginNodes){
+						n.setVisible(true);
+					}
+					for(Node n:networkNodes){
+						n.setVisible(false);
+					}
+					Text serverIP = (Text) overallNodes.get(0);
+					serverIP.setText("ServerIP: " + promptIPField.getText());
+					serverIP.setVisible(true);
+				} catch (Exception e) {
+					connectionError.setVisible(true);
+				}
+			}
+		});
+		
+		networkNodes.add(promptIP);
+		networkNodes.add(promptIPField);
+		networkNodes.add(connectBtn);
+		networkNodes.add(connectionError);
+		mainPane.getChildren().addAll(promptIP, promptIPField, connectBtn, connectionError);
+	}
+	
 	private void loginDisplay(){
 		
 		Text username = new Text("Username:");
@@ -185,6 +251,9 @@ public class ChatClient extends Application {
 		loginNodes.add(loginBtn);
 		loginNodes.add(registerBtn);
 		loginNodes.add(errorText);
+		for(Node n:loginNodes){
+			n.setVisible(false);
+		}
 		mainPane.getChildren().addAll(username, password, usernameField, passwordField, loginBtn, registerBtn, errorText);		
 	}
 	
@@ -282,9 +351,9 @@ public class ChatClient extends Application {
 		}	
 	}
 	
-	private void setUpNetworking() throws Exception {
+	private void setUpNetworking(String IP) throws Exception {
 		@SuppressWarnings("resource")
-		Socket sock = new Socket("127.0.0.1", 4242);
+		Socket sock = new Socket(IP, 4242);
 		InputStreamReader streamReader = new InputStreamReader(sock.getInputStream());
 		reader = new BufferedReader(streamReader);
 		writer = new PrintWriter(sock.getOutputStream());
