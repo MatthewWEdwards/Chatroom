@@ -17,12 +17,15 @@ import java.net.*;
 import java.util.ArrayList;
 
 import javafx.application.Application;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.input.KeyCode;
@@ -315,13 +318,69 @@ public class ChatClient extends Application {
 			}
 		});
 		
+		Text requestFriend = new Text("Request Friends:");
+		requestFriend.relocate(screenWidth*.05*screenScale, screenHeight*.23*screenScale);
+		TextArea requestFriendField = new TextArea();
+		requestFriendField.setTextFormatter(new TextFormatter<String>(change -> { // prevents strings that are too long and newlines
+			String testString = change.getControlNewText();
+			if(testString.length() > maxUsernameLength){
+        		return null;
+        	}else{
+        		for(int i = 0; i < testString.length(); i++){
+        			if(!ApprovedChars.approvedCharSet.contains(testString.charAt(i))){
+        				return null;
+        			}
+        		}
+        		return change;
+        	}
+		}));
+		requestFriendField.setWrapText(false);
+		requestFriendField.setPrefSize(screenWidth*.2*screenScale, 1);
+		requestFriendField.relocate(screenWidth*.05*screenScale + requestFriend.boundsInLocalProperty().get().getWidth() + 5, screenHeight*.23*screenScale);
+		
+		Button requestFriendBtn = new Button("Send Request");
+		requestFriendBtn.setPrefSize(btnWidth*2, btnHeight);
+		requestFriendBtn.relocate(screenWidth*.05*screenScale, screenHeight*.42*screenScale);
+		requestFriendBtn.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				requestFriendExecute(requestFriendField.getText(), onlineStatus.getText().substring("Logged in as: ".length()));
+			}
+		});
+		
+		ObservableList<String> requestsWaiting = FXCollections.observableArrayList();
+		
+		final ComboBox<String> friendRequestsWaiting = new ComboBox<>(requestsWaiting);
+		friendRequestsWaiting.setEditable(true);
+		friendRequestsWaiting.relocate(screenWidth*.05*screenScale, screenHeight*.59*screenScale);
+		
+		Button checkRequestsBtn = new Button("Check Friend Requests");
+		checkRequestsBtn.setPrefSize(btnWidth*2, btnHeight);
+		checkRequestsBtn.relocate(screenWidth*.05*screenScale, screenHeight*.52*screenScale);
+		checkRequestsBtn.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				checkRequestExecute(onlineStatus.getText().substring("Logged in as: ".length()), requestsWaiting, friendRequestsWaiting);
+			}
+		});
+		
+
+		
+		
+		
 		//TODO: improve adding
 		chatNodes.add(currentChat);
 		chatNodes.add(sendText);
 		chatNodes.add(sendButton);
 		chatNodes.add(onlineStatus);
 		chatNodes.add(logoutBtn);
-		mainPane.getChildren().addAll(currentChat, sendText, sendButton, onlineStatus, logoutBtn);
+		chatNodes.add(requestFriendField);
+		chatNodes.add(requestFriend);
+		chatNodes.add(requestFriendBtn);
+		chatNodes.add(friendRequestsWaiting);
+		chatNodes.add(checkRequestsBtn);
+		mainPane.getChildren().addAll(currentChat, sendText, sendButton, onlineStatus, logoutBtn,
+				requestFriendField, requestFriend, requestFriendBtn, friendRequestsWaiting, checkRequestsBtn);
 		for(Node n:chatNodes){
 			n.setVisible(false);
 		}
@@ -349,6 +408,22 @@ public class ChatClient extends Application {
 		for(Node n:chatNodes){
 			n.setVisible(false);
 		}	
+	}
+	
+	private void requestFriendExecute(String friendName, String thisUser){
+		writer.println(signalingChar + "request " + friendName + " " + thisUser );
+		writer.flush();
+		
+	}
+	
+	private void checkRequestExecute(String thisUser, ObservableList<String> requestsWaiting, ComboBox<String> friendRequestsWaiting){
+		ArrayList<String> requests = ChatServer.friendRequests.get(thisUser);
+		if(requests == null)
+			return;
+		for(int i = 0; i < requests.size(); i++)
+			requestsWaiting.add(requests.get(i));
+		friendRequestsWaiting = new ComboBox<String>(requestsWaiting);
+		friendRequestsWaiting.show();
 	}
 	
 	private void setUpNetworking(String IP) throws Exception {
@@ -406,13 +481,30 @@ public class ChatClient extends Application {
 				break;
 				
 			case "noUser":
-				loginErrorText.setText("Username enter not associate with any user");
+				loginErrorText.setText("Username entered not associated with any user");
 				loginErrorText.setVisible(true);
 				break;
 				
 			case "login":
 				loginExecute(message.substring(message.indexOf(' ')+1));
 				break;
+				
+			case "sameUser":
+				loginErrorText.setText("Cannot friend request yourself");
+				loginErrorText.setVisible(true);
+				break;
+			
+			case "alreadyFriends":
+				loginErrorText.setText("Already friends with this user");
+				loginErrorText.setVisible(true);
+				break;
+				
+			case "requestSent":
+				loginErrorText.setText("Friend request sent");
+				loginErrorText.setVisible(true);
+				break;
+	
+	
 				
 			default:
 				break;
