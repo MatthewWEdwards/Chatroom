@@ -6,9 +6,9 @@ $$$ = completed
 
 
 *Public/Private chats
-Friends list
+Friends list  - R
 $$$Fix sendMessage TextArea (currently, clients can send multiple lines at once)
 $$$Make clients enter server IP it wants to connect to
 ~Make code work on multiple computers
-Chat history
-Password change options
+Chat history - R
+Password change options - R
