@@ -132,6 +132,8 @@ public class ChatServer {
 				break;
 
 				
+
+				
 			case "logout":
 				username = message.substring(message.indexOf(" ") + 1);
 				for (ChatUser u : userList) {

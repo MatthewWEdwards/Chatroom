@@ -17,6 +17,7 @@ import java.net.*;
 import java.util.ArrayList;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Rectangle2D;
@@ -32,6 +33,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
 
 public class ChatClient extends Application {
@@ -66,7 +68,21 @@ public class ChatClient extends Application {
 	
 	@Override
 	public void start(Stage primaryStage) throws Exception {
-		
+		   primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
+
+	            @Override
+	            public void handle(WindowEvent event) {
+	                Platform.runLater(new Runnable() {
+
+	                    @Override
+	                    public void run() {
+	                    	if(onlineStatus.visibleProperty().get()){
+	                    		logoutExecute(onlineStatus.getText().substring("Logged in as: ".length()));
+	                    	}                   
+	                    }
+	                });
+	            }
+	        });
 		
 		primaryScreenBounds = Screen.getPrimary().getVisualBounds();
 		screenWidth = primaryScreenBounds.getWidth();
