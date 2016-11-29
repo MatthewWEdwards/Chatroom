@@ -26,6 +26,8 @@ public class ChatServer {
 	private Map<Integer, PrintWriter> streams = new HashMap<Integer, PrintWriter>();
 	private ArrayList<PrintWriter> clientOutputStreams;
 	private ArrayList<ChatUser> userList = new ArrayList<ChatUser>();
+	private HashMap<String, ArrayList<ChatUser>> friendList = new HashMap<String, ArrayList<ChatUser>>();
+	protected static HashMap<String, ArrayList<String>> friendRequests = new HashMap<String, ArrayList<String>>();
 	// TODO: make it so the server tells the client what the signaling char is
 	private static String signalingChar = "~"; // used to transmit commands to the server
 
@@ -154,6 +156,54 @@ public class ChatServer {
 					}
 				}
 				userList.add(toAdd);
+				friendList.put(toAdd.getUsername(), new ArrayList<ChatUser>());
+				friendRequests.put(toAdd.getUsername(), new ArrayList<String>());
+				break;
+			case "request":
+				username = message.substring(message.indexOf(" ") + 1, message.lastIndexOf(" "));
+				password = message.substring(message.lastIndexOf(" ") + 1, message.length()); //password is actually current user
+				boolean exist = false;
+				if(username.equals(password)){
+					//same person
+					sockWriter.println(signalingChar + "sameUser ");
+					sockWriter.flush();
+					return;
+				}
+					
+				for (ChatUser u : userList) {
+					if (u.getUsername().equals(username)) {
+						exist = true;
+						boolean isFriend = false;
+						//check if they're already friends, then either request sent or already friends
+						ArrayList<ChatUser> friends = friendList.get(username);
+						for(int i = 0; i < friends.size(); i++){
+							ChatUser f = friends.get(i);
+							if (f.getUsername().equals(password)){ //where password = current user
+								isFriend = true;
+							}
+						}
+						if(isFriend){ 
+							sockWriter.println(signalingChar + "alreadyFriends ");
+							sockWriter.flush();
+							return;
+						}
+						else {
+							ArrayList<String> requests =  friendRequests.get(username);
+							requests.add(password); //where password = current user
+							friendRequests.put(username, requests);
+							sockWriter.println(signalingChar + "requestSent ");
+							sockWriter.flush();
+							return;
+						}
+					}
+					
+				}
+				if(!exist){
+					sockWriter.println(signalingChar + "noUser ");
+					sockWriter.flush();
+					return;
+				}
+					
 				break;
 
 			// Do nothing
