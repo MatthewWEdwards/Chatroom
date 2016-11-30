@@ -13,6 +13,7 @@
 package assignment7;
 
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -23,10 +24,14 @@ public class ChatUser implements Observer{
 	private PrintWriter userWriter;
 	private int port;
 	private String currentChat;
+	private ArrayList<String> friends;
+	private ArrayList<String> requests;
 	
 	public ChatUser(String username, String password){
 		this.username = username;
 		this.password = password;
+		friends = new ArrayList<String>();
+		requests = new ArrayList<String>();
 	}
 	
 	public String getChat(){
@@ -68,6 +73,22 @@ public class ChatUser implements Observer{
 	
 	public void setPort(int port){
 		this.port = port;
+	}
+	
+	public ArrayList<String> getFriends(){
+		return this.friends;
+	}
+	
+	public ArrayList<String> getRequests(){
+		return this.requests;
+	}
+	
+	public void addToFriends(String newFriend){
+		friends.add(newFriend);
+	}
+	
+	public void addToRequests(String newRequest){
+		requests.add(newRequest);
 	}
 	
 	@Override
