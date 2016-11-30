@@ -6,7 +6,7 @@
  * Matthew Edwards
  * mwe295
  * 16475
- * Slip days used: <0>
+ * Slip days used: <1>
  * Fall 2016
  */
 
@@ -52,6 +52,7 @@ public class ChatClient extends Application {
 	private TextArea sendText;
 	private static Text loginErrorText;
 	private Text onlineStatus;
+	private Text currentChatRoom;
 	private Rectangle2D primaryScreenBounds;
 	private double screenScale = .5;
 	private int canvasXPos;
@@ -388,6 +389,7 @@ public class ChatClient extends Application {
 		});
 		
 		chatRooms = new ListView<String>();
+
 		ScrollPane chatRoomsPane = new ScrollPane();
 		chatRoomsPane.setContent(chatRooms);
 		chatRoomsPane.relocate(screenWidth*.50*screenScale, screenHeight*.60*screenScale);
@@ -424,8 +426,8 @@ public class ChatClient extends Application {
 		 
 		Button publicChatRoomBtn = new Button();
 		publicChatRoomBtn.setText("Make public chat");
-		publicChatRoomBtn.setPrefSize(btnWidth, btnHeight);
-		publicChatRoomBtn.relocate(screenWidth*.15*screenScale, screenHeight*.75*screenScale);
+		publicChatRoomBtn.setPrefSize(btnWidth*1.5, btnHeight);
+		publicChatRoomBtn.relocate(screenWidth*.05*screenScale, screenHeight*.75*screenScale);
 		publicChatRoomBtn.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent event) {
@@ -439,15 +441,68 @@ public class ChatClient extends Application {
 		
 		Button privateChatRoomBtn = new Button();
 		privateChatRoomBtn.setText("Make private chat");
-		privateChatRoomBtn.setPrefSize(btnWidth, btnHeight);
-		privateChatRoomBtn.relocate(screenWidth*.15*screenScale, screenHeight*.85*screenScale);
+		privateChatRoomBtn.setPrefSize(1.5*btnWidth, btnHeight);
+		privateChatRoomBtn.relocate(screenWidth*.05*screenScale, screenHeight*.85*screenScale);
 		privateChatRoomBtn.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent event) {
 				if(ChatRoomName.getText().length() > 1){
-				String username = onlineStatus.getText().substring("Logged in as: ".length());
-				writer.println(ApprovedChars.signalingChar + "makeChatRoom " + ChatRoomName.getText() + " " + username + " true");
-				writer.flush();
+					String username = onlineStatus.getText().substring("Logged in as: ".length());
+					writer.println(ApprovedChars.signalingChar + "makeChatRoom " + ChatRoomName.getText() + " " + username + " true");
+					writer.flush();
+				}
+			}
+		});
+		
+		TextArea userPermission = new TextArea();
+		userPermission.setTextFormatter(new TextFormatter<String>(change -> { // prevents strings that are too long and newlines
+			String testString = change.getControlNewText();
+			if(testString.length() > maxUsernameLength){
+        		return null;
+        	}else{
+        		for(int i = 0; i < testString.length(); i++){
+        			if(!ApprovedChars.approvedCharSet.contains(testString.charAt(i))){
+        				return null;
+        			}
+        		}
+        		return change;
+        	}
+		}));
+		userPermission.setWrapText(false);
+		userPermission.setPrefSize(screenWidth*.2*screenScale, 1);
+		userPermission.relocate(screenWidth*.25*screenScale, screenHeight*.90*screenScale);
+		
+		Button giveUserPermissions = new Button();
+		giveUserPermissions.setText("Add user to room");
+		giveUserPermissions.setPrefSize(1.5*btnWidth, btnHeight);
+		giveUserPermissions.relocate(screenWidth*.05*screenScale, screenHeight*.95*screenScale);
+		giveUserPermissions.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				if(userPermission.getText().length() > 1){
+					String username = onlineStatus.getText().substring("Logged in as: ".length());
+					writer.println(ApprovedChars.signalingChar + "giveUserPermissions " + ChatRoomName.getText() + " " + username + " " + userPermission.getText());
+					writer.flush();
+				}
+			}
+		});
+		
+		currentChatRoom = new Text("Current Chatroom: None");
+		currentChatRoom.relocate(screenWidth*.25*screenScale, 0);
+
+		
+		Button joinChatBtn = new Button();
+		joinChatBtn.setText("Join Chat");
+		joinChatBtn.setPrefSize(1.5*btnWidth, btnHeight);
+		joinChatBtn.relocate(screenWidth*.25*screenScale, screenHeight*.95*screenScale);
+		joinChatBtn.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				if(ChatRoomName.getText().length() > 1){
+					String username = onlineStatus.getText().substring("Logged in as: ".length());
+					writer.println(ApprovedChars.signalingChar + "joinChat " + ChatRoomName.getText() + " "
+					+ username + " " + currentChatRoom.getText().substring("Current Chatroom:".length()));
+					writer.flush();
 				}
 			}
 		});
@@ -467,9 +522,15 @@ public class ChatClient extends Application {
 		chatNodes.add(ChatRoomName);
 		chatNodes.add(publicChatRoomBtn);
 		chatNodes.add(privateChatRoomBtn);
+		chatNodes.add(userPermission);
+		chatNodes.add(giveUserPermissions);
+		chatNodes.add(joinChatBtn);
+		chatNodes.add(currentChatRoom);
+		
 		mainPane.getChildren().addAll(currentChat, sendText, sendButton, onlineStatus, logoutBtn,
 				requestFriendField, requestFriend, requestFriendBtn, friendRequestsWaiting, checkRequestsBtn, 
-				chatRoomsPane, usersListPane, ChatRoomName, publicChatRoomBtn, privateChatRoomBtn);
+				chatRoomsPane, usersListPane, ChatRoomName, publicChatRoomBtn, privateChatRoomBtn, userPermission, 
+				giveUserPermissions, joinChatBtn, currentChatRoom);
 		for(Node n:chatNodes){
 			n.setVisible(false);
 		}
@@ -486,9 +547,7 @@ public class ChatClient extends Application {
 		}	
 		
 	}
-	
 
-	
 	private void logoutExecute(String username){
 		writer.println(ApprovedChars.signalingChar + "logout " + username);
 		writer.flush();
@@ -623,6 +682,18 @@ public class ChatClient extends Application {
 					s.close();
 				    }
 				});
+				break;
+				
+			case "changeRoom":
+				Platform.runLater(new Runnable() {
+				    @Override
+				    public void run() {
+				    	String changeRoom = message.substring(message.indexOf(' ')+1);
+						Scanner s = new Scanner(changeRoom);
+						currentChatRoom.setText("Current Chatroom: " + s.next());
+				    }
+					});
+				
 				break;
 				
 			default:

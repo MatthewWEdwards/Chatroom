@@ -6,7 +6,7 @@
  * Matthew Edwards
  * mwe295
  * 16475
- * Slip days used: <0>
+ * Slip days used: <1>
  * Fall 2016
  */
 
@@ -48,11 +48,23 @@ public class ChatServer {
 
 	}
 
-	private void notifyClients(String message, Socket sock) {
-		String.valueOf(sock.getPort());
+	private void sendMessage(String message, Socket sock) {
+		int port = Integer.valueOf(String.valueOf(sock.getPort()));
+		for(ChatUser u: userList){
+			if(u.getPort() == port){
+				for(ChatRoom r: roomList){
+					if(u.getChat().equals(r.toString())){
+						r.getMessage(message);
+						return;
+					}
+				}
+				return;
+			}
+		}
+		
 		for (ChatUser u : userList) {
 			if (u.getOnlineStatus()) {
-				u.getWriter().println(String.valueOf(sock.getPort()) + " - " + message);
+				u.getWriter().println(port + " - " + message);
 				u.getWriter().flush();
 			}
 		}
@@ -107,7 +119,7 @@ public class ChatServer {
 						command(message);
 					} else {
 						System.out.println("read " + message);
-						notifyClients(message, sock);
+						sendMessage(message, sock);
 					}
 				}
 			} catch (IOException e) {
@@ -149,6 +161,7 @@ public class ChatServer {
 							u.getWriter().println(ApprovedChars.signalingChar + "login " + username);
 							u.getWriter().flush();
 							updateUserList();
+							updateRoomList();
 							return;
 						}
 					}
@@ -235,20 +248,89 @@ public class ChatServer {
 			case "makeChatRoom":
 
 				String chatRoom = message.substring(message.indexOf(" ") + 1);
-				Scanner s = new Scanner(chatRoom);
-				String chatRoomName = s.next();
-				String chatRoomowner = s.next();
-				boolean chatRoomPublicPrivate = Boolean.valueOf(s.next());
+				Scanner sMakeChatRoom = new Scanner(chatRoom);
+				String chatRoomName = sMakeChatRoom.next();
+				String chatRoomowner = sMakeChatRoom.next();
+				boolean chatRoomPublicPrivate = Boolean.valueOf(sMakeChatRoom.next());
 				ChatRoom newChatRoom = new ChatRoom(chatRoomName, chatRoomowner, chatRoomPublicPrivate);
 				for (ChatRoom r : roomList) {
 					if (r.equals(newChatRoom)) {
 						//TODO: room already exists
+						sMakeChatRoom.close();
 						return;
 					}
 				}
 				roomList.add(newChatRoom);
-				s.close();
+				newChatRoom.addUser(chatRoomowner);
+				sMakeChatRoom.close();
 				updateRoomList();
+				break;
+				
+			case "giveUserPermissions":
+				String permissionsString = message.substring(message.indexOf(" ") + 1);
+				Scanner sGiveUserPermissions = new Scanner(permissionsString);
+				String permissionsChatRoom = sGiveUserPermissions.next();
+				String supposedOwner = sGiveUserPermissions.next();
+				String userToAdd = sGiveUserPermissions.next();
+				
+				for (ChatRoom r : roomList) {
+					if (r.toString().equals(permissionsChatRoom)) {
+						if(!(r.privateChat)){
+							//TODO: send message about not private chat
+							sGiveUserPermissions.close();
+							return;
+						}
+						if(!supposedOwner.equals(r.owner)){
+							//TODO: send message about not owner
+							sGiveUserPermissions.close();
+							return;
+						}
+						r.addUser(userToAdd);
+						sGiveUserPermissions.close();
+						return;
+					}
+				}
+				sGiveUserPermissions.close();
+				break;
+				
+			case "joinChat":
+				String joinString = message.substring(message.indexOf(" ") + 1);
+				Scanner sjoinChat = new Scanner(joinString);
+				String toJoin = sjoinChat.next();
+				String userToJoin = sjoinChat.next();
+				String currentChatRoom = sjoinChat.next();
+				ChatUser userObjToJoin = null;
+				ChatRoom currentChatRoomObj = null;
+				for(ChatUser u: userList){
+					if(u.toString().equals(userToJoin)){
+						userObjToJoin = u;
+						break;
+					}
+				}
+				for(ChatRoom r: roomList){
+					if(currentChatRoom.toString().equals(r.toString())){
+						currentChatRoomObj = r;
+						break;
+					}
+				}
+				for (ChatRoom r : roomList) {
+					if(r.toString().equals(toJoin)){
+						if(r.checkUser(userToJoin) || !r.privateChat){
+							if(!currentChatRoom.equals("None")){
+								currentChatRoomObj.deleteObserver(userObjToJoin);
+							}
+							r.addObserver(userObjToJoin);
+							userObjToJoin.setChat(r.toString());
+							sockWriter.println(ApprovedChars.signalingChar + "changeRoom " + toJoin);
+							sockWriter.flush();
+							sockWriter.println("Joining the following chatroom: " + toJoin);
+							sockWriter.flush();
+						}
+						sjoinChat.close();
+						return;
+					}
+				}
+				sjoinChat.close();
 				break;
 
 			// Do nothing

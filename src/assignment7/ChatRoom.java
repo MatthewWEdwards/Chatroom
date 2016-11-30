@@ -6,13 +6,12 @@
  * Matthew Edwards
  * mwe295
  * 16475
- * Slip days used: <0>
+ * Slip days used: <1>
  * Fall 2016
  */
 
 package assignment7;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Observable;
 import java.util.Observer;
@@ -21,7 +20,7 @@ import java.util.Set;
 public class ChatRoom extends Observable{
 	public String name;
 	public boolean privateChat;
-	private Set<ChatUser> approvedUsers = new HashSet<ChatUser>();
+	private Set<String> approvedUsers = new HashSet<String>();
 	public String owner;
 	
 	public ChatRoom(String name, String owner, boolean privateChat){
@@ -31,15 +30,23 @@ public class ChatRoom extends Observable{
 	}
 	
 	public void getMessage(String message){
+		this.setChanged();
 		notifyObservers(message);
 	}
 	
-	public void addUser(ChatUser u){
+	public void addUser(String u){
 		approvedUsers.add(u);
 	}
 	
-	public void removeUser(ChatUser u){
+	public void removeUser(String u){
 		approvedUsers.remove(u);
+	}
+	
+	public boolean checkUser(String u){
+		if(approvedUsers.contains(u)){
+			return true;
+		}
+		return false;
 	}
 	
 	@Override
@@ -73,6 +80,5 @@ public class ChatRoom extends Observable{
 	public String toString(){
 		return name;
 	}
-	
 
 }

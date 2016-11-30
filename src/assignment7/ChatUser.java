@@ -6,7 +6,7 @@
  * Matthew Edwards
  * mwe295
  * 16475
- * Slip days used: <0>
+ * Slip days used: <1>
  * Fall 2016
  */
 
@@ -22,11 +22,21 @@ public class ChatUser implements Observer{
 	private boolean online;
 	private PrintWriter userWriter;
 	private int port;
+	private String currentChat;
 	
 	public ChatUser(String username, String password){
 		this.username = username;
 		this.password = password;
 	}
+	
+	public String getChat(){
+		return currentChat;
+	}
+	
+	public void setChat(String currentChat){
+		this.currentChat = currentChat;
+	}
+	
 	
 	public String getUsername(){
 		return username;
@@ -76,7 +86,7 @@ public class ChatUser implements Observer{
 	public void update(Observable arg0, Object arg1) {
 		if(arg0 instanceof ChatRoom){
 			if(arg1 instanceof String){
-				userWriter.println(ApprovedChars.signalingChar + arg1);
+				userWriter.println(username + "> " + arg1);
 				userWriter.flush();
 			}
 		}
