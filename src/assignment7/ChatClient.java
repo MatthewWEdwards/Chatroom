@@ -109,10 +109,10 @@ public class ChatClient extends Application {
 		
 		btnWidth = (int) (screenWidth*.1*screenScale);
 		btnHeight = (int) (screenHeight*.05*screenScale);
-		canvasXPos = (int) (screenWidth*.5*screenScale);
+		canvasXPos = (int) (screenWidth*.56*screenScale);
 		canvasYPos = (int) (screenHeight*.05*screenScale);
 		canvasWidth = (int) (screenWidth*.4*screenScale);
-		canvasHeight = (int) (screenHeight*.4*screenScale);
+		canvasHeight = (int) (screenHeight*.25*screenScale);
 
 		Text serverIP = new Text();
 		serverIP.relocate(screenWidth*.05*screenScale, 0);
@@ -316,6 +316,9 @@ public class ChatClient extends Application {
 		    }
 		});	
 		
+		Text enterMessage = new Text("Enter Message:");
+		enterMessage.relocate(canvasXPos + btnWidth*1.1, canvasYPos + canvasHeight + 5);
+		
 		Button sendButton = new Button("Send");
 		sendButton.setPrefSize(btnWidth, btnHeight);
 		sendButton.relocate(canvasXPos, canvasYPos + canvasHeight + 25);
@@ -389,21 +392,25 @@ public class ChatClient extends Application {
 		});
 		
 		chatRooms = new ListView<String>();
-
+		chatRooms.setItems(rooms);
 		ScrollPane chatRoomsPane = new ScrollPane();
 		chatRoomsPane.setContent(chatRooms);
-		chatRoomsPane.relocate(screenWidth*.50*screenScale, screenHeight*.60*screenScale);
-		chatRoomsPane.setPrefSize(screenWidth*.25*screenScale, screenHeight*.25*screenScale);
-		chatRooms.setItems(rooms);
+		chatRoomsPane.relocate(screenWidth*.71*screenScale, screenHeight*.52*screenScale);
+		chatRoomsPane.setPrefSize(screenWidth*.25*screenScale, screenHeight*.20*screenScale);
+		
+		Text roomsList = new Text("Chat rooms available");
+		roomsList.relocate(screenWidth*.71*screenScale, screenHeight*.48*screenScale);
 		
 		usersList = new ListView<String>();
 		usersList.setItems(users);
 		ScrollPane usersListPane = new ScrollPane();
 		usersListPane.setContent(usersList);
-		usersListPane.relocate(screenWidth*.75*screenScale, screenHeight*.60*screenScale);
-		usersListPane.setPrefSize(screenWidth*.25*screenScale, screenHeight*.25*screenScale);
+		usersListPane.relocate(screenWidth*.71*screenScale, screenHeight*.80*screenScale);
+		usersListPane.setPrefSize(screenWidth*.25*screenScale, screenHeight*.20*screenScale);
 		
-
+		Text userList = new Text("Users online");
+		userList.relocate(screenWidth*.71*screenScale, screenHeight*.76*screenScale);
+		
 		
 		TextArea ChatRoomName = new TextArea();
 		ChatRoomName.setTextFormatter(new TextFormatter<String>(change -> { // prevents strings that are too long and newlines
@@ -420,14 +427,16 @@ public class ChatClient extends Application {
         	}
 		}));
 		ChatRoomName.setWrapText(false);
-		ChatRoomName.setPrefSize(screenWidth*.2*screenScale, 1);
-		ChatRoomName.relocate(screenWidth*.25*screenScale, screenHeight*.75*screenScale);
+		ChatRoomName.setPrefSize(screenWidth*.15*screenScale, 1);
+		ChatRoomName.relocate(screenWidth*.36*screenScale, screenHeight*.52*screenScale);
 		
-		 
+		Text enterChatRoom = new Text("Enter Chatroom:");
+		enterChatRoom.relocate(screenWidth*.36*screenScale, screenHeight*.48*screenScale);
+		
 		Button publicChatRoomBtn = new Button();
 		publicChatRoomBtn.setText("Make public chat");
 		publicChatRoomBtn.setPrefSize(btnWidth*1.5, btnHeight);
-		publicChatRoomBtn.relocate(screenWidth*.05*screenScale, screenHeight*.75*screenScale);
+		publicChatRoomBtn.relocate(screenWidth*.36*screenScale, screenHeight*.62*screenScale);
 		publicChatRoomBtn.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent event) {
@@ -442,7 +451,7 @@ public class ChatClient extends Application {
 		Button privateChatRoomBtn = new Button();
 		privateChatRoomBtn.setText("Make private chat");
 		privateChatRoomBtn.setPrefSize(1.5*btnWidth, btnHeight);
-		privateChatRoomBtn.relocate(screenWidth*.05*screenScale, screenHeight*.85*screenScale);
+		privateChatRoomBtn.relocate(screenWidth*.36*screenScale, screenHeight*.68*screenScale);
 		privateChatRoomBtn.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent event) {
@@ -469,13 +478,16 @@ public class ChatClient extends Application {
         	}
 		}));
 		userPermission.setWrapText(false);
-		userPermission.setPrefSize(screenWidth*.2*screenScale, 1);
-		userPermission.relocate(screenWidth*.25*screenScale, screenHeight*.90*screenScale);
+		userPermission.setPrefSize(screenWidth*.15*screenScale, 1);
+		userPermission.relocate(screenWidth*.52*screenScale, screenHeight*.52*screenScale);
+		
+		Text enterUser = new Text("Enter User:");
+		enterUser.relocate(screenWidth*.52*screenScale, screenHeight*.48*screenScale);
 		
 		Button giveUserPermissions = new Button();
 		giveUserPermissions.setText("Add user to room");
 		giveUserPermissions.setPrefSize(1.5*btnWidth, btnHeight);
-		giveUserPermissions.relocate(screenWidth*.05*screenScale, screenHeight*.95*screenScale);
+		giveUserPermissions.relocate(screenWidth*.52*screenScale, screenHeight*.62*screenScale);
 		giveUserPermissions.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent event) {
@@ -488,13 +500,13 @@ public class ChatClient extends Application {
 		});
 		
 		currentChatRoom = new Text("Current Chatroom: None");
-		currentChatRoom.relocate(screenWidth*.25*screenScale, 0);
+		currentChatRoom.relocate(screenWidth*.56*screenScale, 0);
 
 		
 		Button joinChatBtn = new Button();
 		joinChatBtn.setText("Join Chat");
 		joinChatBtn.setPrefSize(1.5*btnWidth, btnHeight);
-		joinChatBtn.relocate(screenWidth*.25*screenScale, screenHeight*.95*screenScale);
+		joinChatBtn.relocate(screenWidth*.36*screenScale, screenHeight*.74*screenScale);
 		joinChatBtn.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent event) {
@@ -526,11 +538,17 @@ public class ChatClient extends Application {
 		chatNodes.add(giveUserPermissions);
 		chatNodes.add(joinChatBtn);
 		chatNodes.add(currentChatRoom);
+		chatNodes.add(roomsList);
+		chatNodes.add(userList);
+		chatNodes.add(enterUser);
+		chatNodes.add(enterChatRoom);
+		chatNodes.add(enterMessage);
 		
 		mainPane.getChildren().addAll(currentChat, sendText, sendButton, onlineStatus, logoutBtn,
 				requestFriendField, requestFriend, requestFriendBtn, friendRequestsWaiting, checkRequestsBtn, 
 				chatRoomsPane, usersListPane, ChatRoomName, publicChatRoomBtn, privateChatRoomBtn, userPermission, 
-				giveUserPermissions, joinChatBtn, currentChatRoom);
+				giveUserPermissions, joinChatBtn, currentChatRoom, roomsList, userList, enterUser,enterChatRoom,
+				enterMessage);
 		for(Node n:chatNodes){
 			n.setVisible(false);
 		}
