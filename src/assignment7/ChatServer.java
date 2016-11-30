@@ -25,8 +25,7 @@ import java.util.Scanner;
 public class ChatServer {
 	private ArrayList<ChatUser> userList = new ArrayList<ChatUser>();
 	private ArrayList<ChatRoom> roomList = new ArrayList<ChatRoom>();
-	private HashMap<String, ArrayList<ChatUser>> friendList = new HashMap<String, ArrayList<ChatUser>>();
-	protected static HashMap<String, ArrayList<String>> friendRequests = new HashMap<String, ArrayList<String>>();
+	
 
 	public static void main(String[] args) {
 		try {
@@ -195,15 +194,15 @@ public class ChatServer {
 					}
 				}
 				userList.add(toAdd);
-				friendList.put(toAdd.getUsername(), new ArrayList<ChatUser>());
-				friendRequests.put(toAdd.getUsername(), new ArrayList<String>());
 				break;
 				
 			case "request":
-				username = message.substring(message.indexOf(" ") + 1, message.lastIndexOf(" "));
-				password = message.substring(message.lastIndexOf(" ") + 1, message.length()); //password is actually current user
+				String curUser = new String();
+				String potentialFriend = new String();
+				potentialFriend = message.substring(message.indexOf(" ") + 1, message.lastIndexOf(" "));
+				curUser = message.substring(message.lastIndexOf(" ") + 1, message.length()); 
 				boolean exist = false;
-				if(username.equals(password)){
+				if(potentialFriend.equals(curUser)){
 					//same person
 					sockWriter.println(ApprovedChars.signalingChar + "sameUser ");
 					sockWriter.flush();
@@ -211,30 +210,30 @@ public class ChatServer {
 				}
 					
 				for (ChatUser u : userList) {
-					if (u.getUsername().equals(username)) {
+					if (u.getUsername().equals(potentialFriend)) {
 						exist = true;
-						boolean isFriend = false;
 						//check if they're already friends, then either request sent or already friends
-						ArrayList<ChatUser> friends = friendList.get(username);
-						for(int i = 0; i < friends.size(); i++){
-							ChatUser f = friends.get(i);
-							if (f.getUsername().equals(password)){ //where password = current user
-								isFriend = true;
+						ArrayList<String> friends = u.getFriends(); //friends of potentialFriend
+						for(String s : friends){
+							if (s.equals(curUser)){ //already friends
+								sockWriter.println(ApprovedChars.signalingChar + "alreadyFriends ");
+								sockWriter.flush();
+								return;
 							}
 						}
-						if(isFriend){ 
-							sockWriter.println(ApprovedChars.signalingChar + "alreadyFriends ");
-							sockWriter.flush();
-							return;
+						ArrayList<String> requests = u.getRequests();
+						for(String s: requests ){
+							if (s.equals(curUser)){
+								sockWriter.println(ApprovedChars.signalingChar + "alreadyRequested ");
+								sockWriter.flush();
+								return;
+							}
 						}
-						else {
-							ArrayList<String> requests =  friendRequests.get(username);
-							requests.add(password); //where password = current user
-							friendRequests.put(username, requests);
-							sockWriter.println(ApprovedChars.signalingChar + "requestSent ");
-							sockWriter.flush();
-							return;
-						}
+						u.addToRequests(curUser);
+						sockWriter.println(ApprovedChars.signalingChar + "requestSent ");
+						sockWriter.flush();
+						return;
+						
 					}
 					
 				}
