@@ -15,6 +15,7 @@ package assignment7;
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -22,6 +23,8 @@ import javafx.event.ActionEvent;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.ListView;
+import javafx.scene.control.ScrollPane;
 import javafx.event.EventHandler;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
@@ -42,6 +45,8 @@ import javafx.stage.WindowEvent;
 public class ChatClient extends Application {
 	private BufferedReader reader;
 	private PrintWriter writer;
+	
+	//JavaFX variables
 	private Pane mainPane;
 	private TextArea currentChat;
 	private TextArea sendText;
@@ -59,11 +64,14 @@ public class ChatClient extends Application {
 	private int btnHeight;
 	private static final int maxUsernameLength = 15;
 	private static final int maxPasswordLength = 15;
-	private static String signalingChar = "~"; // used to transmit commands to the server
 	private ArrayList<Node> loginNodes = new ArrayList<Node>();
 	private ArrayList<Node> chatNodes = new ArrayList<Node>();
 	private ArrayList<Node> networkNodes = new ArrayList<Node>();
 	private ArrayList<Node> overallNodes = new ArrayList<Node>();
+	private ListView<String> usersList;
+	private ListView<String> chatRooms;
+	private ObservableList<String> users = FXCollections.observableArrayList();
+	private ObservableList<String> rooms = FXCollections.observableArrayList();
 
 	public void run() throws Exception {
 		launch();
@@ -237,7 +245,7 @@ public class ChatClient extends Application {
 					errorText.setVisible(true);
 					return;
 				}
-				writer.println(signalingChar + "login " + usernameField.getText() + " " + passwordField.getText());
+				writer.println(ApprovedChars.signalingChar + "login " + usernameField.getText() + " " + passwordField.getText());
 				writer.flush();
 				errorText.setVisible(false);
 			}
@@ -256,13 +264,13 @@ public class ChatClient extends Application {
 					return;
 					
 				}
-				writer.println(signalingChar + "register " + usernameField.getText() + " " + passwordField.getText());
+				writer.println(ApprovedChars.signalingChar + "register " + usernameField.getText() + " " + passwordField.getText());
 				writer.flush();
 				errorText.setVisible(false);
 			}
 		});
 		
-		//TODO: make this series of adds better
+
 		loginNodes.add(username);
 		loginNodes.add(password);
 		loginNodes.add(usernameField);
@@ -289,7 +297,7 @@ public class ChatClient extends Application {
 		sendText.relocate(canvasXPos + btnWidth*1.1, canvasYPos + canvasHeight + 25);
 		sendText.setPrefSize(canvasWidth - btnWidth*1.1, 10);
 		sendText.setTextFormatter(new TextFormatter<String>(change -> { // prevents strings that are too long and newlines
-        	if(change.getControlNewText().contains(signalingChar)){ 
+        	if(change.getControlNewText().contains(ApprovedChars.signalingChar)){ 
         		return null;
         	}
         	return change;
@@ -379,11 +387,71 @@ public class ChatClient extends Application {
 			}
 		});
 		
+		chatRooms = new ListView<String>();
+		ScrollPane chatRoomsPane = new ScrollPane();
+		chatRoomsPane.setContent(chatRooms);
+		chatRoomsPane.relocate(screenWidth*.50*screenScale, screenHeight*.60*screenScale);
+		chatRoomsPane.setPrefSize(screenWidth*.25*screenScale, screenHeight*.25*screenScale);
+		chatRooms.setItems(rooms);
+		
+		usersList = new ListView<String>();
+		usersList.setItems(users);
+		ScrollPane usersListPane = new ScrollPane();
+		usersListPane.setContent(usersList);
+		usersListPane.relocate(screenWidth*.75*screenScale, screenHeight*.60*screenScale);
+		usersListPane.setPrefSize(screenWidth*.25*screenScale, screenHeight*.25*screenScale);
+		
 
 		
+		TextArea ChatRoomName = new TextArea();
+		ChatRoomName.setTextFormatter(new TextFormatter<String>(change -> { // prevents strings that are too long and newlines
+			String testString = change.getControlNewText();
+			if(testString.length() > maxUsernameLength){
+        		return null;
+        	}else{
+        		for(int i = 0; i < testString.length(); i++){
+        			if(!ApprovedChars.approvedCharSet.contains(testString.charAt(i))){
+        				return null;
+        			}
+        		}
+        		return change;
+        	}
+		}));
+		ChatRoomName.setWrapText(false);
+		ChatRoomName.setPrefSize(screenWidth*.2*screenScale, 1);
+		ChatRoomName.relocate(screenWidth*.25*screenScale, screenHeight*.75*screenScale);
 		
+		 
+		Button publicChatRoomBtn = new Button();
+		publicChatRoomBtn.setText("Make public chat");
+		publicChatRoomBtn.setPrefSize(btnWidth, btnHeight);
+		publicChatRoomBtn.relocate(screenWidth*.15*screenScale, screenHeight*.75*screenScale);
+		publicChatRoomBtn.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				if(ChatRoomName.getText().length() > 1){
+				String username = onlineStatus.getText().substring("Logged in as: ".length());
+				writer.println(ApprovedChars.signalingChar + "makeChatRoom " + ChatRoomName.getText() + " " + username + " false");
+				writer.flush();
+				}
+			}
+		});
 		
-		//TODO: improve adding
+		Button privateChatRoomBtn = new Button();
+		privateChatRoomBtn.setText("Make private chat");
+		privateChatRoomBtn.setPrefSize(btnWidth, btnHeight);
+		privateChatRoomBtn.relocate(screenWidth*.15*screenScale, screenHeight*.85*screenScale);
+		privateChatRoomBtn.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				if(ChatRoomName.getText().length() > 1){
+				String username = onlineStatus.getText().substring("Logged in as: ".length());
+				writer.println(ApprovedChars.signalingChar + "makeChatRoom " + ChatRoomName.getText() + " " + username + " true");
+				writer.flush();
+				}
+			}
+		});
+		
 		chatNodes.add(currentChat);
 		chatNodes.add(sendText);
 		chatNodes.add(sendButton);
@@ -394,8 +462,14 @@ public class ChatClient extends Application {
 		chatNodes.add(requestFriendBtn);
 		chatNodes.add(friendRequestsWaiting);
 		chatNodes.add(checkRequestsBtn);
+		chatNodes.add(chatRoomsPane);
+		chatNodes.add(usersListPane);
+		chatNodes.add(ChatRoomName);
+		chatNodes.add(publicChatRoomBtn);
+		chatNodes.add(privateChatRoomBtn);
 		mainPane.getChildren().addAll(currentChat, sendText, sendButton, onlineStatus, logoutBtn,
-				requestFriendField, requestFriend, requestFriendBtn, friendRequestsWaiting, checkRequestsBtn);
+				requestFriendField, requestFriend, requestFriendBtn, friendRequestsWaiting, checkRequestsBtn, 
+				chatRoomsPane, usersListPane, ChatRoomName, publicChatRoomBtn, privateChatRoomBtn);
 		for(Node n:chatNodes){
 			n.setVisible(false);
 		}
@@ -413,8 +487,10 @@ public class ChatClient extends Application {
 		
 	}
 	
+
+	
 	private void logoutExecute(String username){
-		writer.println(signalingChar + "logout " + username);
+		writer.println(ApprovedChars.signalingChar + "logout " + username);
 		writer.flush();
 		onlineStatus.setText("");
 		for(Node n: loginNodes){
@@ -426,7 +502,7 @@ public class ChatClient extends Application {
 	}
 	
 	private void requestFriendExecute(String friendName, String thisUser){
-		writer.println(signalingChar + "request " + friendName + " " + thisUser );
+		writer.println(ApprovedChars.signalingChar + "request " + friendName + " " + thisUser );
 		writer.flush();
 		
 	}
@@ -466,7 +542,7 @@ public class ChatClient extends Application {
 			try {
 				
 				while ((message = reader.readLine()) != null) {
-					if(message.length() > 0 && message.charAt(0) == signalingChar.charAt(0)){
+					if(message.length() > 0 && message.charAt(0) == ApprovedChars.signalingChar.charAt(0)){
 						serverCommands(message);
 					}else{
 						currentChat.appendText(message + "\n");
@@ -519,11 +595,43 @@ public class ChatClient extends Application {
 				loginErrorText.setVisible(true);
 				break;
 				
+			case "updateUsers":
+				Platform.runLater(new Runnable() {
+				    @Override
+			    public void run() {
+			    	users.clear();				   
+					String newUsers = message.substring(message.indexOf(' ')+1);
+					Scanner s = new Scanner(newUsers);
+					while(s.hasNext()){
+						users.add(s.next());
+					}
+					s.close();
+				    }
+				});
+				break;
+				
+			case "updateRooms":
+				Platform.runLater(new Runnable() {
+				    @Override
+			    public void run() {
+			    	rooms.clear();				   
+					String newRooms = message.substring(message.indexOf(' ')+1);
+					Scanner s = new Scanner(newRooms);
+					while(s.hasNext()){
+						rooms.add(s.next());
+					}
+					s.close();
+				    }
+				});
+				break;
+				
 			default:
 				break;
 		}
 		
 	}
+	
+
 
 
 }

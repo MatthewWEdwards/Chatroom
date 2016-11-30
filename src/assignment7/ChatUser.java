@@ -13,10 +13,12 @@
 package assignment7;
 
 import java.io.PrintWriter;
+import java.util.Observable;
+import java.util.Observer;
 
-public class ChatUser{
+public class ChatUser implements Observer{
 	private String username;
-	private String password; //TODO: salted hash?
+	private String password; 
 	private boolean online;
 	private PrintWriter userWriter;
 	private int port;
@@ -68,6 +70,22 @@ public class ChatUser{
 			return true;
 		}
 		return false;
+	}
+
+	@Override
+	public void update(Observable arg0, Object arg1) {
+		if(arg0 instanceof ChatRoom){
+			if(arg1 instanceof String){
+				userWriter.println(ApprovedChars.signalingChar + arg1);
+				userWriter.flush();
+			}
+		}
+		
+	}
+	
+	@Override
+	public String toString(){
+		return username;
 	}
 	
 }

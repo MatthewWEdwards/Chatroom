@@ -16,6 +16,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public abstract class ApprovedChars{
+	public static String signalingChar = "~";
 	public static Set<Character> approvedCharSet = new HashSet<Character>(
 			Arrays.asList('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k',
 						  'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',

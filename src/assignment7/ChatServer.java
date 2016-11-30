@@ -20,16 +20,13 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
+import java.util.Scanner;
 
 public class ChatServer {
-	private Map<Integer, PrintWriter> streams = new HashMap<Integer, PrintWriter>();
-	private ArrayList<PrintWriter> clientOutputStreams;
 	private ArrayList<ChatUser> userList = new ArrayList<ChatUser>();
+	private ArrayList<ChatRoom> roomList = new ArrayList<ChatRoom>();
 	private HashMap<String, ArrayList<ChatUser>> friendList = new HashMap<String, ArrayList<ChatUser>>();
 	protected static HashMap<String, ArrayList<String>> friendRequests = new HashMap<String, ArrayList<String>>();
-	// TODO: make it so the server tells the client what the signaling char is
-	private static String signalingChar = "~"; // used to transmit commands to the server
 
 	public static void main(String[] args) {
 		try {
@@ -40,14 +37,10 @@ public class ChatServer {
 	}
 
 	private void setUpNetworking() throws Exception {
-		clientOutputStreams = new ArrayList<PrintWriter>();
 		@SuppressWarnings("resource")
 		ServerSocket serverSock = new ServerSocket(4242);
 		while (true) {
 			Socket clientSocket = serverSock.accept();
-			PrintWriter writer = new PrintWriter(clientSocket.getOutputStream());
-			clientOutputStreams.add(writer);
-			streams.put(Integer.valueOf(clientSocket.getPort()), writer);
 			Thread t = new Thread(new ClientHandler(clientSocket));
 			t.start();
 			System.out.println("got a connection");
@@ -60,6 +53,36 @@ public class ChatServer {
 		for (ChatUser u : userList) {
 			if (u.getOnlineStatus()) {
 				u.getWriter().println(String.valueOf(sock.getPort()) + " - " + message);
+				u.getWriter().flush();
+			}
+		}
+	}
+	
+	private void updateUserList(){
+		String message = new String();
+		message = "~updateUsers ";
+		for (ChatUser u : userList) {
+			if (u.getOnlineStatus()) {
+				message += u.toString() + " ";
+			}
+		}
+		for (ChatUser u : userList) {
+			if (u.getOnlineStatus()) {
+				u.getWriter().println(message);
+				u.getWriter().flush();
+			}
+		}
+	}
+	
+	private void updateRoomList(){
+		String message = new String();
+		message = "~updateRooms ";
+		for (ChatRoom r : roomList) {
+			message += r.toString() + " ";
+		}
+		for (ChatUser u : userList) {
+			if (u.getOnlineStatus()) {
+				u.getWriter().println(message);
 				u.getWriter().flush();
 			}
 		}
@@ -80,7 +103,7 @@ public class ChatServer {
 			String message;
 			try {
 				while ((message = reader.readLine()) != null) {
-					if (message.length() > 0 && message.charAt(0) == signalingChar.charAt(0)) {
+					if (message.length() > 0 && message.charAt(0) == ApprovedChars.signalingChar.charAt(0)) {
 						command(message);
 					} else {
 						System.out.println("read " + message);
@@ -111,25 +134,26 @@ public class ChatServer {
 				for (ChatUser u : userList) {
 					if (u.getUsername().equals(username)) {
 						if(!(u.getPassword().equals(password))){
-							sockWriter.println(signalingChar + "passwordMismatch ");
+							sockWriter.println(ApprovedChars.signalingChar + "passwordMismatch ");
 							sockWriter.flush();
 							return;
 						}
 						if (u.getOnlineStatus()) {
-							sockWriter.println(signalingChar + "alreadyOnline ");
+							sockWriter.println(ApprovedChars.signalingChar + "alreadyOnline ");
 							sockWriter.flush();
 							return;
 						} else {
 							u.setWriter(sockWriter);
 							u.setPort(sock.getPort());
 							u.setOnlineStatus(true);
-							u.getWriter().println(signalingChar + "login " + username);
+							u.getWriter().println(ApprovedChars.signalingChar + "login " + username);
 							u.getWriter().flush();
+							updateUserList();
 							return;
 						}
 					}
 				}
-				sockWriter.println(signalingChar + "noUser ");
+				sockWriter.println(ApprovedChars.signalingChar + "noUser ");
 				sockWriter.flush();
 				break;
 
@@ -139,9 +163,11 @@ public class ChatServer {
 				for (ChatUser u : userList) {
 					if (u.getUsername().equals(username)) {
 						u.setOnlineStatus(false);
+						updateUserList();
 						return;
 					}
 				}
+				
 				break;
 			// Create a new user, or tell the client a username is taken
 			case "register":
@@ -150,7 +176,7 @@ public class ChatServer {
 				ChatUser toAdd = new ChatUser(username, password);
 				for (ChatUser u : userList) {
 					if (u.equals(toAdd)) {
-						sockWriter.println(signalingChar + "registerError ");
+						sockWriter.println(ApprovedChars.signalingChar + "registerError ");
 						sockWriter.flush();
 						return;
 					}
@@ -159,13 +185,14 @@ public class ChatServer {
 				friendList.put(toAdd.getUsername(), new ArrayList<ChatUser>());
 				friendRequests.put(toAdd.getUsername(), new ArrayList<String>());
 				break;
+				
 			case "request":
 				username = message.substring(message.indexOf(" ") + 1, message.lastIndexOf(" "));
 				password = message.substring(message.lastIndexOf(" ") + 1, message.length()); //password is actually current user
 				boolean exist = false;
 				if(username.equals(password)){
 					//same person
-					sockWriter.println(signalingChar + "sameUser ");
+					sockWriter.println(ApprovedChars.signalingChar + "sameUser ");
 					sockWriter.flush();
 					return;
 				}
@@ -183,7 +210,7 @@ public class ChatServer {
 							}
 						}
 						if(isFriend){ 
-							sockWriter.println(signalingChar + "alreadyFriends ");
+							sockWriter.println(ApprovedChars.signalingChar + "alreadyFriends ");
 							sockWriter.flush();
 							return;
 						}
@@ -191,7 +218,7 @@ public class ChatServer {
 							ArrayList<String> requests =  friendRequests.get(username);
 							requests.add(password); //where password = current user
 							friendRequests.put(username, requests);
-							sockWriter.println(signalingChar + "requestSent ");
+							sockWriter.println(ApprovedChars.signalingChar + "requestSent ");
 							sockWriter.flush();
 							return;
 						}
@@ -199,11 +226,29 @@ public class ChatServer {
 					
 				}
 				if(!exist){
-					sockWriter.println(signalingChar + "noUser ");
+					sockWriter.println(ApprovedChars.signalingChar + "noUser ");
 					sockWriter.flush();
 					return;
 				}
 					
+				break;
+			case "makeChatRoom":
+
+				String chatRoom = message.substring(message.indexOf(" ") + 1);
+				Scanner s = new Scanner(chatRoom);
+				String chatRoomName = s.next();
+				String chatRoomowner = s.next();
+				boolean chatRoomPublicPrivate = Boolean.valueOf(s.next());
+				ChatRoom newChatRoom = new ChatRoom(chatRoomName, chatRoomowner, chatRoomPublicPrivate);
+				for (ChatRoom r : roomList) {
+					if (r.equals(newChatRoom)) {
+						//TODO: room already exists
+						return;
+					}
+				}
+				roomList.add(newChatRoom);
+				s.close();
+				updateRoomList();
 				break;
 
 			// Do nothing
