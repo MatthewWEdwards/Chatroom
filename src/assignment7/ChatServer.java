@@ -53,7 +53,7 @@ public class ChatServer {
 			if(u.getPort() == port){
 				for(ChatRoom r: roomList){
 					if(u.getChat().equals(r.toString())){
-						r.getMessage(u.toString() + "> " + message);
+						r.getMessage(message);
 						return;
 					}
 				}
@@ -229,6 +229,19 @@ public class ChatServer {
 								return;
 							}
 						}
+						for (ChatUser c : userList) {
+							if (c.getUsername().equals(curUser)) {
+								requests = c.getRequests();
+								for (String s : requests)
+									if (s.equals(potentialFriend)){
+										sockWriter.println(ApprovedChars.signalingChar + "doubleRequest ");
+										sockWriter.flush();
+										return;
+									}
+										
+							} 
+						}
+						
 						u.addToRequests(curUser);
 						sockWriter.println(ApprovedChars.signalingChar + "requestSent ");
 						sockWriter.flush();
@@ -242,7 +255,20 @@ public class ChatServer {
 					sockWriter.flush();
 					return;
 				}
-					
+									
+				break;
+			case "checkRequest":
+				curUser = message.substring(message.indexOf(" ") + 1);
+				for(ChatUser u : userList){
+					if(u.getUsername().equals(curUser)){
+						ArrayList<String> requests = u.getRequests();
+						if(requests.size() == 0)
+							return;
+						sockWriter.println(ApprovedChars.signalingChar + "requestReturn " + requests);
+						sockWriter.flush();
+					}
+						
+				}
 				break;
 			case "makeChatRoom":
 
