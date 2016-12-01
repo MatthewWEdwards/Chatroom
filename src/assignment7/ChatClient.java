@@ -701,10 +701,22 @@ public class ChatClient extends Application {
 				loginErrorText.setVisible(true);
 				break;
 			case "requestReturn":
-				String name = message.substring(message.lastIndexOf(' ')+1);
-				name.replace("["," " );
-				name.replace("]"," " );				
-				requestsWaiting.add(name);
+				String requests = message.substring(message.indexOf('[')+1, message.indexOf(']'));
+				requestsWaiting.clear();
+				int i = 0;
+				
+				boolean q = requests.contains(",");
+				if(q == true){
+				requestsWaiting.add(requests.substring(0, requests.indexOf(',')));
+				i = requests.indexOf(',') + 2;
+				while( requests.indexOf(',') != requests.lastIndexOf(',')){
+				requests = requests.substring(i);
+				requestsWaiting.add(requests.substring(0, requests.indexOf(',')));
+				i = requests.indexOf(',') + 2;
+				}
+				}
+				requestsWaiting.add(requests.substring(i));
+				break;
 			case "updateUsers":
 				Platform.runLater(new Runnable() {
 				    @Override
