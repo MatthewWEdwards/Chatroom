@@ -540,6 +540,61 @@ public class ChatClient extends Application {
 			}
 		});
 		
+		TextArea PotentialFriendName = new TextArea();
+		PotentialFriendName.setTextFormatter(new TextFormatter<String>(change -> { // prevents strings that are too long and newlines
+			String testString = change.getControlNewText();
+			if(testString.length() > maxUsernameLength){
+        		return null;
+        	}else{
+        		for(int i = 0; i < testString.length(); i++){
+        			if(!ApprovedChars.approvedCharSet.contains(testString.charAt(i))){
+        				return null;
+        			}
+        		}
+        		return change;
+        	}
+		}));
+		PotentialFriendName.setWrapText(false);
+		PotentialFriendName.setPrefSize(screenWidth*.25*screenScale, .4);
+		PotentialFriendName.relocate(screenWidth*.05*screenScale, screenHeight*.72*screenScale);
+		
+		Text responseToRequest = new Text("Respond to Friend Requests:");
+		responseToRequest.relocate(screenWidth*.05*screenScale, screenHeight*.67*screenScale);
+		 
+		Button acceptFriendBtn = new Button();
+		acceptFriendBtn.setText("Accept");
+		acceptFriendBtn.setPrefSize(btnWidth, btnHeight);
+		acceptFriendBtn.relocate(screenWidth*.05*screenScale, screenHeight*.85*screenScale);
+		acceptFriendBtn.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				if(PotentialFriendName.getText().length() > 1){ //create text area to enter about friend
+					String username = onlineStatus.getText().substring("Logged in as: ".length());
+					writer.println(ApprovedChars.signalingChar + "acceptFriend " + PotentialFriendName.getText() + " "
+					+ username );
+					writer.flush();
+					PotentialFriendName.clear();
+				}
+			}
+		});
+		
+		Button declineFriendBtn = new Button();
+		declineFriendBtn.setText("Decline");
+		declineFriendBtn.setPrefSize(btnWidth, btnHeight);
+		declineFriendBtn.relocate(screenWidth*.2*screenScale, screenHeight*.85*screenScale);
+		declineFriendBtn.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				if(PotentialFriendName.getText().length() > 1){ //create text area to enter about friend
+					String username = onlineStatus.getText().substring("Logged in as: ".length());
+					writer.println(ApprovedChars.signalingChar + "declineFriend " + PotentialFriendName.getText() + " "
+					+ username );
+					writer.flush();
+					PotentialFriendName.clear();
+				}
+			}
+		});
+		
 		chatNodes.add(currentChat);
 		chatNodes.add(sendText);
 		chatNodes.add(sendButton);
