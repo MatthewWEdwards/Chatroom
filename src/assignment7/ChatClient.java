@@ -568,7 +568,7 @@ public class ChatClient extends Application {
 		acceptFriendBtn.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent event) {
-				if(PotentialFriendName.getText().length() > 1){ //create text area to enter about friend
+				if(PotentialFriendName.getText().length() > 0){ //create text area to enter about friend
 					String username = onlineStatus.getText().substring("Logged in as: ".length());
 					writer.println(ApprovedChars.signalingChar + "acceptFriend " + PotentialFriendName.getText() + " "
 					+ username );
@@ -585,7 +585,7 @@ public class ChatClient extends Application {
 		declineFriendBtn.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent event) {
-				if(PotentialFriendName.getText().length() > 1){ //create text area to enter about friend
+				if(PotentialFriendName.getText().length() > 0){ //create text area to enter about friend
 					String username = onlineStatus.getText().substring("Logged in as: ".length());
 					writer.println(ApprovedChars.signalingChar + "declineFriend " + PotentialFriendName.getText() + " "
 					+ username );
