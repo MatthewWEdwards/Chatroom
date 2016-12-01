@@ -274,6 +274,38 @@ public class ChatServer {
 						
 				}
 				break;
+					case "acceptFriend":
+				potentialFriend = message.substring(message.indexOf(" ") + 1, message.lastIndexOf(" "));
+				curUser = message.substring(message.lastIndexOf(" ") + 1, message.length()); 
+				for(ChatUser u : userList){
+					if(u.getUsername().equals(curUser)){
+						u.addToFriends(potentialFriend);
+					}
+					System.out.println(u.getFriends());
+				}
+				for(ChatUser u : userList){
+					if(u.getUsername().equals(potentialFriend)){
+						u.addToFriends(curUser);
+					}
+					System.out.println(u.getFriends());
+				}
+				sockWriter.println(ApprovedChars.signalingChar   + "friendResponse ");
+				sockWriter.flush();
+		
+				break;
+			case "declineFriend":
+				potentialFriend = message.substring(message.indexOf(" ") + 1, message.lastIndexOf(" "));
+				curUser = message.substring(message.lastIndexOf(" ") + 1, message.length()); 
+				for(ChatUser u : userList){
+					if(u.getUsername().equals(curUser)){
+						u.declineRequest(potentialFriend);
+					}
+					System.out.println(u.getRequests());
+						
+				}
+				sockWriter.println(ApprovedChars.signalingChar + "friendResponse " );
+				sockWriter.flush();
+				break;
 			case "makeChatRoom":
 
 				String chatRoom = message.substring(message.indexOf(" ") + 1);
