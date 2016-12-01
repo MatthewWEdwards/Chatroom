@@ -93,6 +93,11 @@ public class ChatUser implements Observer{
 		requests.add(newRequest);
 	}
 	
+	public void declineRequest(String notFriend){
+		requests.remove(notFriend);
+	}
+	
+	
 	@Override
 	public boolean equals(Object u){
 		if(!(u instanceof ChatUser)){
