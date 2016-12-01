@@ -53,7 +53,7 @@ public class ChatServer {
 			if(u.getPort() == port){
 				for(ChatRoom r: roomList){
 					if(u.getChat().equals(r.toString())){
-						r.getMessage(message);
+						r.getMessage(u.toString() + "> " + message);
 						return;
 					}
 				}
