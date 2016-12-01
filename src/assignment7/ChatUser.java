@@ -115,6 +115,11 @@ public class ChatUser implements Observer{
 		
 	}
 	
+	public void getPrivateMessage(String message){
+		userWriter.println(message);
+		userWriter.flush();
+	}
+	
 	@Override
 	public String toString(){
 		return username;

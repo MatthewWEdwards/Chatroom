@@ -116,7 +116,11 @@ public class ChatServer {
 				while ((message = reader.readLine()) != null) {
 					if (message.length() > 0 && message.charAt(0) == ApprovedChars.signalingChar.charAt(0)) {
 						command(message);
-					} else {
+						continue;
+					} 
+					if(message.length() > 0 && message.charAt(0) == '#'){
+						command("~privateMessage "  + message.substring(message.indexOf('#')));
+					}else {
 						System.out.println("read " + message);
 						sendMessage(message, sock);
 					}
@@ -356,6 +360,32 @@ public class ChatServer {
 					}
 				}
 				sjoinChat.close();
+				break;
+			case "privateMessage":
+				String PMString = message.substring(message.indexOf(" ") + 1);
+				Scanner privateMessageScanner = new Scanner(PMString);
+				String PMReceiver = privateMessageScanner.next().substring(1);
+				String PM = privateMessageScanner.next();
+				String sender = "";
+				for(ChatUser u: userList){
+					if(u.getWriter().equals(sockWriter)){
+						sender = u.toString();
+						break;
+					}
+				}
+				
+				PM = sender + " ---> " + PMReceiver + "> " + PM;
+				sockWriter.println(PM);
+				sockWriter.flush();
+				for(ChatUser u: userList){
+					if(u.toString().equals(PMReceiver)){
+						u.getPrivateMessage(PM);
+						return;
+					}
+				}
+				sockWriter.println("Message failure: user not available");
+				sockWriter.flush();
+				
 				break;
 
 			// Do nothing
