@@ -22,7 +22,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
 
-public class ChatServer {
+import javafx.application.Application;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.scene.Node;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.layout.Pane;
+import javafx.scene.text.Text;
+import javafx.stage.Stage;
+
+public class ChatServer extends Application {
 	private ArrayList<ChatUser> userList = new ArrayList<ChatUser>();
 	private ArrayList<ChatRoom> roomList = new ArrayList<ChatRoom>();
 	
@@ -30,6 +40,7 @@ public class ChatServer {
 	public static void main(String[] args) {
 		try {
 			new ChatServer().setUpNetworking();
+			launch();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -428,6 +439,27 @@ public class ChatServer {
 				return;
 			}
 		}
+	}
+
+	@Override
+	public void start(Stage primaryStage) throws Exception {
+		
+		Pane close = new Pane();
+		Button end = new Button();
+		end.resize(50, 50);
+		end.setText("Close Server");
+		end.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				System.exit(0);
+			}
+
+		});
+		close.getChildren().add(end);
+		
+		primaryStage.setScene(new Scene(close, 100, 100));
+		primaryStage.show();
+		
 	}
 
 }
