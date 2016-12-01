@@ -25,12 +25,15 @@ import javafx.collections.ObservableList;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextArea;
 import javafx.event.EventHandler;
 import javafx.geometry.Rectangle2D;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -49,7 +52,7 @@ public class ChatClient extends Application {
 	//JavaFX variables
 	private Pane mainPane;
 	private TextArea currentChat;
-	private TextArea sendText;
+	private TextField sendText;
 	private static Text loginErrorText;
 	private Text onlineStatus;
 	private Text currentChatRoom;
@@ -74,6 +77,7 @@ public class ChatClient extends Application {
 	private ObservableList<String> users = FXCollections.observableArrayList();
 	private ObservableList<String> rooms = FXCollections.observableArrayList();
 	private ObservableList<String> requestsWaiting = FXCollections.observableArrayList();
+	private String PMDefault = "";
 
 	public void run() throws Exception {
 		launch();
@@ -137,7 +141,7 @@ public class ChatClient extends Application {
 		connectionError.setFill(Color.RED);
 		connectionError.setVisible(false);
 		
-		TextArea promptIPField = new TextArea();
+		TextField promptIPField = new TextField();
 		promptIPField.setTextFormatter(new TextFormatter<String>(change -> { // prevents strings that are too long and newlines
 			String testString = change.getControlNewText();
 			if(testString.length() > maxUsernameLength){
@@ -151,7 +155,6 @@ public class ChatClient extends Application {
         		return change;
         	}
 		}));
-		promptIPField.setWrapText(false);
 		promptIPField.setPrefSize(screenWidth*.2*screenScale, 1);
 		promptIPField.relocate(screenWidth*.05*screenScale + promptIP.boundsInLocalProperty().get().getWidth() + 5, screenHeight*.05*screenScale);
 		promptIPField.setText("127.0.0.1");
@@ -199,7 +202,7 @@ public class ChatClient extends Application {
 		errorText.setVisible(false);
 		loginErrorText = errorText;
 		
-		TextArea usernameField = new TextArea();
+		TextField usernameField = new TextField();
 		usernameField.setTextFormatter(new TextFormatter<String>(change -> { // prevents strings that are too long and newlines
 			String testString = change.getControlNewText();
 			if(testString.length() > maxUsernameLength){
@@ -213,11 +216,10 @@ public class ChatClient extends Application {
         		return change;
         	}
 		}));
-		usernameField.setWrapText(false);
 		usernameField.setPrefSize(screenWidth*.2*screenScale, 1);
 		usernameField.relocate(screenWidth*.05*screenScale + username.boundsInLocalProperty().get().getWidth() + 5, screenHeight*.05*screenScale);
 		
-		TextArea passwordField = new TextArea();
+		TextField passwordField = new TextField();
 		passwordField.setTextFormatter(new TextFormatter<String>(change -> {// prevents strings that are too long and newlines
         	String testString = change.getControlNewText();
 			if(testString.length() > maxPasswordLength){
@@ -231,7 +233,6 @@ public class ChatClient extends Application {
         		return change;
         	}
 		}));
-		passwordField.setWrapText(false);
 		passwordField.setPrefSize(screenWidth*.2*screenScale, 1);
 		passwordField.relocate(screenWidth*.05*screenScale + username.boundsInLocalProperty().get().getWidth() + 5, screenHeight*.15*screenScale);
 		
@@ -294,7 +295,7 @@ public class ChatClient extends Application {
 		currentChat.relocate(canvasXPos, canvasYPos);
 		currentChat.setPrefSize(canvasWidth, canvasHeight);
 		
-		sendText = new TextArea();
+		sendText = new TextField();
 		sendText.setEditable(true);	
 		sendText.relocate(canvasXPos + btnWidth*1.1, canvasYPos + canvasHeight + 25);
 		sendText.setPrefSize(canvasWidth - btnWidth*1.1, 10);
@@ -309,10 +310,14 @@ public class ChatClient extends Application {
 		    public void handle(KeyEvent keyEvent) {
 		        if (keyEvent.getCode() == KeyCode.ENTER)  {
 		        	if(sendText.getText().trim().length() > 0){
-						writer.println(sendText.getText().trim());
+		        		String toSend = sendText.getText().trim();
+		        		sendText.setText("");
+						writer.println(toSend);
 						writer.flush();
 		        	}
 					sendText.clear();
+					sendText.setText(PMDefault);
+					sendText.positionCaret(PMDefault.length() + 1);
 		        }
 		    }
 		});	
@@ -331,6 +336,8 @@ public class ChatClient extends Application {
 					writer.flush();
 				}
 					sendText.clear();
+					sendText.setText(PMDefault);
+					sendText.positionCaret(PMDefault.length() + 1);
 			}
 		});
 		
@@ -348,7 +355,7 @@ public class ChatClient extends Application {
 		});
 		Text requestFriend = new Text("Request Friends:");
 		requestFriend.relocate(screenWidth*.05*screenScale, screenHeight*.23*screenScale);
-		TextArea requestFriendField = new TextArea();
+		TextField requestFriendField = new TextField();
 		requestFriendField.setTextFormatter(new TextFormatter<String>(change -> { // prevents strings that are too long and newlines
 			String testString = change.getControlNewText();
 			if(testString.length() > maxUsernameLength){
@@ -362,7 +369,6 @@ public class ChatClient extends Application {
         		return change;
         	}
 		}));
-		requestFriendField.setWrapText(false);
 		requestFriendField.setPrefSize(screenWidth*.2*screenScale, 1);
 		requestFriendField.relocate(screenWidth*.05*screenScale + requestFriend.boundsInLocalProperty().get().getWidth() + 5, screenHeight*.23*screenScale);
 		
@@ -413,7 +419,7 @@ public class ChatClient extends Application {
 		userList.relocate(screenWidth*.71*screenScale, screenHeight*.76*screenScale);
 		
 		
-		TextArea ChatRoomName = new TextArea();
+		TextField ChatRoomName = new TextField();
 		ChatRoomName.setTextFormatter(new TextFormatter<String>(change -> { // prevents strings that are too long and newlines
 			String testString = change.getControlNewText();
 			if(testString.length() > maxUsernameLength){
@@ -427,7 +433,6 @@ public class ChatClient extends Application {
         		return change;
         	}
 		}));
-		ChatRoomName.setWrapText(false);
 		ChatRoomName.setPrefSize(screenWidth*.15*screenScale, 1);
 		ChatRoomName.relocate(screenWidth*.36*screenScale, screenHeight*.52*screenScale);
 		
@@ -464,7 +469,7 @@ public class ChatClient extends Application {
 			}
 		});
 		
-		TextArea userPermission = new TextArea();
+		TextField userPermission = new TextField();
 		userPermission.setTextFormatter(new TextFormatter<String>(change -> { // prevents strings that are too long and newlines
 			String testString = change.getControlNewText();
 			if(testString.length() > maxUsernameLength){
@@ -478,7 +483,6 @@ public class ChatClient extends Application {
         		return change;
         	}
 		}));
-		userPermission.setWrapText(false);
 		userPermission.setPrefSize(screenWidth*.15*screenScale, 1);
 		userPermission.relocate(screenWidth*.52*screenScale, screenHeight*.52*screenScale);
 		
@@ -520,6 +524,22 @@ public class ChatClient extends Application {
 			}
 		});
 		
+		Button privateChatBtn = new Button();
+		privateChatBtn.setText("Default PM user");
+		privateChatBtn.setPrefSize(1.5*btnWidth, btnHeight);
+		privateChatBtn.relocate(screenWidth*.52*screenScale, screenHeight*.68*screenScale);
+		privateChatBtn.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				if(userPermission.getText().length() > 0){
+					PMDefault = "#" + userPermission.getText() + " ";
+					sendText.clear();
+					sendText.setText(PMDefault);
+					sendText.positionCaret(PMDefault.length() + 1);
+				}
+			}
+		});
+		
 		chatNodes.add(currentChat);
 		chatNodes.add(sendText);
 		chatNodes.add(sendButton);
@@ -544,12 +564,13 @@ public class ChatClient extends Application {
 		chatNodes.add(enterUser);
 		chatNodes.add(enterChatRoom);
 		chatNodes.add(enterMessage);
+		chatNodes.add(privateChatBtn);
 		
 		mainPane.getChildren().addAll(currentChat, sendText, sendButton, onlineStatus, logoutBtn,
 				requestFriendField, requestFriend, requestFriendBtn, friendRequestsWaiting, checkRequestsBtn, 
 				chatRoomsPane, usersListPane, ChatRoomName, publicChatRoomBtn, privateChatRoomBtn, userPermission, 
 				giveUserPermissions, joinChatBtn, currentChatRoom, roomsList, userList, enterUser,enterChatRoom,
-				enterMessage);
+				enterMessage, privateChatBtn);
 		for(Node n:chatNodes){
 			n.setVisible(false);
 		}

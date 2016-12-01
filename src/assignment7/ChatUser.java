@@ -16,6 +16,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.Scanner;
 
 public class ChatUser implements Observer{
 	private String username;
@@ -116,8 +117,17 @@ public class ChatUser implements Observer{
 	}
 	
 	public void getPrivateMessage(String message){
-		userWriter.println(message);
-		userWriter.flush();
+		Scanner privateMessageScanner = new Scanner(message);
+		String lineOne = privateMessageScanner.next();
+		if(privateMessageScanner.hasNext()){
+			String lineTwo = privateMessageScanner.nextLine();
+			userWriter.println(lineOne + lineTwo);
+			userWriter.flush();
+		}else{
+			userWriter.println(message);
+			userWriter.flush();
+		}
+		privateMessageScanner.close();
 	}
 	
 	@Override

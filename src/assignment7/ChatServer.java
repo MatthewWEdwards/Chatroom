@@ -365,7 +365,10 @@ public class ChatServer {
 				String PMString = message.substring(message.indexOf(" ") + 1);
 				Scanner privateMessageScanner = new Scanner(PMString);
 				String PMReceiver = privateMessageScanner.next().substring(1);
-				String PM = privateMessageScanner.next();
+				String PM;
+				if(privateMessageScanner.hasNext()){
+					 PM = privateMessageScanner.nextLine();
+				}else{ PM = " ";}
 				String sender = "";
 				for(ChatUser u: userList){
 					if(u.getWriter().equals(sockWriter)){
@@ -374,7 +377,7 @@ public class ChatServer {
 					}
 				}
 				
-				PM = sender + " ---> " + PMReceiver + "> " + PM;
+				PM = sender + " ~ " + PMReceiver + "> " + PM;
 				sockWriter.println(PM);
 				sockWriter.flush();
 				for(ChatUser u: userList){
