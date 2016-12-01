@@ -73,6 +73,7 @@ public class ChatClient extends Application {
 	private ListView<String> chatRooms;
 	private ObservableList<String> users = FXCollections.observableArrayList();
 	private ObservableList<String> rooms = FXCollections.observableArrayList();
+	private ObservableList<String> requestsWaiting = FXCollections.observableArrayList();
 
 	public void run() throws Exception {
 		launch();
@@ -375,7 +376,7 @@ public class ChatClient extends Application {
 			}
 		});
 		
-		ObservableList<String> requestsWaiting = FXCollections.observableArrayList();
+		
 		
 		final ComboBox<String> friendRequestsWaiting = new ComboBox<>(requestsWaiting);
 		friendRequestsWaiting.setEditable(true);
@@ -581,17 +582,15 @@ public class ChatClient extends Application {
 	private void requestFriendExecute(String friendName, String thisUser){
 		writer.println(ApprovedChars.signalingChar + "request " + friendName + " " + thisUser );
 		writer.flush();
+
 		
 	}
 	
 	private void checkRequestExecute(String thisUser, ObservableList<String> requestsWaiting, ComboBox<String> friendRequestsWaiting){
-		ArrayList<String> requests =  new ArrayList<String>();
-		if(requests == null)
-			return;
-		for(int i = 0; i < requests.size(); i++)
-			requestsWaiting.add(requests.get(i));
-		friendRequestsWaiting = new ComboBox<String>(requestsWaiting);
-		friendRequestsWaiting.show();
+		writer.println(ApprovedChars.signalingChar + "checkRequest " + thisUser );
+		writer.flush();
+		friendRequestsWaiting.setItems(requestsWaiting);
+		
 	}
 	
 	private void setUpNetworking(String IP) throws Exception {
@@ -661,6 +660,7 @@ public class ChatClient extends Application {
 				loginErrorText.setText("Cannot friend request yourself");
 				loginErrorText.setVisible(true);
 				break;
+				
 			
 			case "alreadyFriends":
 				loginErrorText.setText("Already friends with this user");
@@ -674,7 +674,16 @@ public class ChatClient extends Application {
 			case "alreadyRequested":
 				loginErrorText.setText("Already requested this user");
 				loginErrorText.setVisible(true);
-				
+				break;
+			case "doubleRequest":
+				loginErrorText.setText("This user has request you, check requests");
+				loginErrorText.setVisible(true);
+				break;
+			case "requestReturn":
+				String name = message.substring(message.lastIndexOf(' ')+1);
+				name.replace("["," " );
+				name.replace("]"," " );				
+				requestsWaiting.add(name);
 			case "updateUsers":
 				Platform.runLater(new Runnable() {
 				    @Override
