@@ -772,6 +772,9 @@ public class ChatClient extends Application {
 				}
 				requestsWaiting.add(requests.substring(i));
 				break;
+			case "friendResponse":
+				System.out.println("did the button");
+				break;
 			case "updateUsers":
 				Platform.runLater(new Runnable() {
 				    @Override
