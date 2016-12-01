@@ -58,7 +58,7 @@ public class ChatRoom extends Observable{
 		if(!privateChat){
 			super.addObserver(userToAdd);
 		}else{
-			if(approvedUsers.contains(userToAdd)){
+			if(approvedUsers.contains(userToAdd.toString())){
 				super.addObserver(userToAdd);
 			}
 		}

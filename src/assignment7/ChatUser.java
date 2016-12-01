@@ -108,7 +108,7 @@ public class ChatUser implements Observer{
 	public void update(Observable arg0, Object arg1) {
 		if(arg0 instanceof ChatRoom){
 			if(arg1 instanceof String){
-				userWriter.println(username + "> " + arg1);
+				userWriter.println(arg1);
 				userWriter.flush();
 			}
 		}
