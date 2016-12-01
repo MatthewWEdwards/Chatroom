@@ -281,13 +281,13 @@ public class ChatServer {
 					if(u.getUsername().equals(curUser)){
 						u.addToFriends(potentialFriend);
 					}
-					System.out.println(u.getFriends());
+					
 				}
 				for(ChatUser u : userList){
 					if(u.getUsername().equals(potentialFriend)){
 						u.addToFriends(curUser);
 					}
-					System.out.println(u.getFriends());
+					
 				}
 				sockWriter.println(ApprovedChars.signalingChar   + "friendResponse ");
 				sockWriter.flush();
