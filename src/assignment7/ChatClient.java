@@ -585,7 +585,7 @@ public class ChatClient extends Application {
 	}
 	
 	private void checkRequestExecute(String thisUser, ObservableList<String> requestsWaiting, ComboBox<String> friendRequestsWaiting){
-		ArrayList<String> requests = ChatServer.friendRequests.get(thisUser);
+		ArrayList<String> requests =  new ArrayList<String>();
 		if(requests == null)
 			return;
 		for(int i = 0; i < requests.size(); i++)
@@ -671,6 +671,9 @@ public class ChatClient extends Application {
 				loginErrorText.setText("Friend request sent");
 				loginErrorText.setVisible(true);
 				break;
+			case "alreadyRequested":
+				loginErrorText.setText("Already requested this user");
+				loginErrorText.setVisible(true);
 				
 			case "updateUsers":
 				Platform.runLater(new Runnable() {
